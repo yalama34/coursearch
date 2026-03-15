@@ -1,0 +1,158 @@
+services:
+
+
+  postgres:
+    image: postgres:16.4
+    container_name: recsys_postgres
+    restart: always
+
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+    # ports:
+    #   - "${DB_PORT}:5432"
+
+    networks:
+      - recsys_net
+
+
+  chroma:
+    image: chromadb/chroma:1.5.6.dev16
+    container_name: recsys_chroma
+    restart: always
+
+    volumes:
+      - chroma_data:/chroma/chroma
+
+    healthcheck:
+      test: ["CMD-SHELL", "wget --spider -q http://localhost:8000/api/v1/heartbeat || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+    # ports:
+    #   - "${CHROMA_PORT}:8000"
+
+    networks:
+      - recsys_net
+
+
+  ml_service:
+    build:
+      context: ./apps/ml-service
+      dockerfile: ./Dockerfile
+
+    container_name: recsys_ml_service
+    restart: always
+
+    environment:
+      # postgres
+      DB_HOST: postgres
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+      # chroma
+      CHROMA_HOST: chroma
+      CHROMA_PORT: 8000
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+      chroma:
+        condition: service_healthy
+      migration:
+        condition: service_completed_successfully
+
+    healthcheck:
+      test: ["CMD-SHELL", "wget --spider -q http://localhost:8001/health || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+
+    # ports:
+    #   - "${ML_SERVICE_PORT}:8001"
+
+    networks:
+      - recsys_net
+
+
+  migration:
+    image: recsys_backend_image:latest
+    build:
+      context: ./apps/core-api
+      dockerfile: ./Dockerfile
+    container_name: recsys_migrations
+
+    command: ./migrate.sh
+    restart: "no"
+
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+    networks:
+      - recsys_net
+
+
+  core_api:
+    image: recsys_backend_image:latest
+    container_name: recsys_backend
+    restart: always
+
+    environment:
+      # postgres
+      DB_HOST: postgres
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+      # chroma
+      CHROMA_HOST: chroma
+      CHROMA_PORT: 8000
+      # ml-service
+      ML_SERVICE_URL: http://ml_service:${ML_SERVICE_PORT}
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+      chroma:
+        condition: service_healthy
+      ml_service:
+        condition: service_healthy
+      migration:
+        condition: service_completed_successfully
+
+    ports:
+      - "${API_PORT}:8000"
+
+    networks:
+      - recsys_net
+
+
+volumes:
+  postgres_data:
+  chroma_data:
+
+
+networks:
+  recsys_net:
+    driver: bridge

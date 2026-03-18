@@ -1,21 +1,51 @@
 import math
 from datetime import datetime, date
 from typing import List, Dict, Any, Optional
+import pandas as pd
+import os
+
 
 class CourseRecommender:
 
-    def __init__(self, db_config: Dict[str, str]):
-        self.db_config = db_config
-        self.connection = None
+    def __init__(self, csv_path: str = None):
+        self.csv_path = csv_path or os.path.join(os.path.dirname(__file__), 'courses.csv')
+        self.courses_cache = None
 
-    def get_courses_from_db(self) -> List[Dict[str, Any]]:
-    #заглушка тут должна быть
-        courses = [
-            {'id': 1, 'views': 15000, 'likes': 1200, 'created_at': date(2025, 1, 15)},
-            {'id': 2, 'views': 5000, 'likes': 350, 'created_at': date(2025, 2, 20)},
-            {'id': 3, 'views': 200000, 'likes': 15000, 'created_at': date(2024, 11, 5)},
-        ]
-        return courses
+    def load_courses_from_csv(self, file_path: str = None) -> List[Dict[str, Any]]:
+        path = file_path or self.csv_path
+
+        try:
+            df = pd.read_csv(path)
+            courses = []
+            for _, row in df.iterrows():
+                if isinstance(row['created_at'], str):
+                    created_at = datetime.strptime(row['created_at'], '%Y-%m-%d').date()
+                else:
+                    created_at = row['created_at']
+
+                course = {
+                    'id': int(row['id']),
+                    'views': int(row['views']),
+                    'likes': int(row['likes']),
+                    'created_at': created_at
+                }
+                courses.append(course)
+
+            print(f"Загружено {len(courses)} курсов из {path}")
+            self.courses_cache = courses
+            return courses
+
+        except FileNotFoundError:
+            print(f"Файл {path} не найден")
+            return []
+        except Exception as e:
+            print(f"Ошибка при загрузке CSV: {e}")
+            return []
+
+    def get_courses(self) -> List[Dict[str, Any]]:
+        if self.courses_cache is not None:
+            return self.courses_cache
+        return self.load_courses_from_csv()
 
     def calculate_novelty_score(self, created_at, current_date, half_life=90, scale=1000):
         if isinstance(created_at, datetime):
@@ -23,35 +53,47 @@ class CourseRecommender:
         age_days = (current_date - created_at).days
         if age_days <= 0:
             return scale
-        # Экспоненциальное затухание: exp(-age * ln(2) / half_life)
-        # ln(2) ~ 0.693147
         decay = math.exp(-age_days * 0.693147 / half_life)
         return decay * scale
 
     def calculate_course_weight(self, course: Dict[str, Any],
                                 weights: Dict[str, float],
                                 current_date: date,
-                                half_life_days: int = 90) -> float:
+                                half_life_days: int = 90,
+                                scale: int = 1000) -> float:
 
         views_weight = course['views'] * weights.get('views', 0)
-
         likes_weight = course['likes'] * weights.get('likes', 0)
 
         novelty_score = self.calculate_novelty_score(
             course['created_at'],
             current_date,
-            half_life_days
+            half_life_days,
+            scale
         )
         novelty_weight = novelty_score * weights.get('novelty', 0)
 
-        # Суммируем
         total = views_weight + likes_weight + novelty_weight
         return round(total, 4)
 
     def get_top_n_courses(self,
                           top_n: int = 10,
                           weights: Optional[Dict[str, float]] = None,
-                          half_life_days: int = 90) -> List[int]:
+                          half_life_days: int = 90,
+                          scale: int = 1000,
+                          csv_path: str = None) -> Dict[str, Any]:
+
+        if csv_path:
+            courses = self.load_courses_from_csv(csv_path)
+        else:
+            courses = self.get_courses()
+
+        if not courses:
+            return {
+                "course_ids": [],
+                "total": 0,
+                "error": "Нет данных для рекомендаций"
+            }
 
         if weights is None:
             weights = {
@@ -59,11 +101,6 @@ class CourseRecommender:
                 'likes': 0.5,
                 'novelty': 0.3
             }
-
-        total_weight_sum = sum(weights.values())
-        print(f"Используемые веса: {weights}, сумма = {total_weight_sum}")
-
-        courses = self.get_courses_from_db()
 
         current_date = date.today()
 
@@ -73,7 +110,8 @@ class CourseRecommender:
                 course,
                 weights,
                 current_date,
-                half_life_days
+                half_life_days,
+                scale
             )
 
             courses_with_weights.append({
@@ -84,14 +122,21 @@ class CourseRecommender:
                 'created_at': course['created_at']
             })
 
-        # Сортируем по убыванию веса
         sorted_courses = sorted(
             courses_with_weights,
             key=lambda x: x['weight'],
             reverse=True
         )
-
         top_courses = sorted_courses[:top_n]
+
+        result = {
+            "course_id": [course['id'] for course in top_courses],
+            "total": len(top_courses),
+            "weights_used": weights,
+            "half_life_days": half_life_days,
+            "scale": scale,
+            "timestamp": current_date.isoformat()
+        }
 
         print(f"\nТоп-{top_n} курсов:")
         for i, course in enumerate(top_courses, 1):
@@ -99,21 +144,20 @@ class CourseRecommender:
                   f"(просмотров: {course['views']}, лайков: {course['likes']}, "
                   f"создан: {course['created_at']})")
 
-        return [course['id'] for course in top_courses]
+        return result
+
 
 def main():
+    recommender = CourseRecommender()
+    result = recommender.get_top_n_courses(top_n=10)
+    print(f"Результат на выходе:{result}")
+    print("\n" + "=" * 50)
+    print("РЕЗУЛЬТАТ:")
+    print("=" * 50)
+    print(f"ID курсов: {result['course_id']}")
+    print(f"Всего: {result['total']}")
+    print(f"Параметры: {result['weights_used']}")
 
-    db_config = {
-        'host': 'localhost',
-        'database': 'courses_db',
-        'user': 'postgres',
-        'password': 'password'
-    }
-
-    recommender = CourseRecommender(db_config)
-
-    top_courses = recommender.get_top_n_courses(top_n=5)
-    print(f"Результат (ID курсов): {top_courses}")
 
 if __name__ == "__main__":
     main()

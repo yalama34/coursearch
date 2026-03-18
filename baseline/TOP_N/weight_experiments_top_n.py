@@ -4,7 +4,7 @@ from top_n import CourseRecommender
 
 def interactive_weight_input():
 
-    recommender = CourseRecommender({})
+    recommender = CourseRecommender()
 
     print("ИНТЕРАКТИВНЫЙ ПОДБОР ВЕСОВ")
     print("Введите параметры (для выхода введите 'q')")
@@ -46,32 +46,23 @@ def interactive_weight_input():
             if abs(total - 1.0) > 0.01:
                 print(f"Предупреждение: сумма весов = {total:.2f}, рекомендуется 1.0")
 
-            original_method = recommender.calculate_novelty_score
-
-            def make_calculator(orig, scale_val):
-                def wrapped(created_at, current_date, half_life):
-                    return orig(created_at, current_date, half_life, scale_val)
-
-                return wrapped
-
-            recommender.calculate_novelty_score = make_calculator(original_method, scale)
-
             print("\nРезультат:")
             top_courses = recommender.get_top_n_courses(
                 top_n=5,
                 weights=weights,
-                half_life_days=half_life
+                half_life_days=half_life,
+                scale=scale
             )
 
-            print(f"\nID курсов: {top_courses}")
+            print(f"\nID курсов: {top_courses['course_id']}")
 
             print("\nДетализация:")
-            courses = recommender.get_courses_from_db()
+            courses = recommender.get_courses()
             current_date = date.today()
 
             for course in courses:
-                if course['id'] in top_courses:
-                    novelty = original_method(
+                if course['id'] in top_courses['course_id']:
+                    novelty = recommender.calculate_novelty_score(
                         course['created_at'],
                         current_date,
                         half_life,
@@ -81,8 +72,6 @@ def interactive_weight_input():
                           f"просмотры={course['views']}, "
                           f"лайки={course['likes']}, "
                           f"новизна={novelty:.1f}")
-
-            recommender.calculate_novelty_score = original_method
 
         except ValueError as e:
             print(f"Ошибка ввода: {e}")

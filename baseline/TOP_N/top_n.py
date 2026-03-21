@@ -1,17 +1,36 @@
 import math
 from datetime import datetime, date
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, Union
 import pandas as pd
 import os
 
 
 class CourseRecommender:
+    """
+        Рекомендательная система на основе популярности и новизны курсов.
 
+        Принцип работы:
+        - Загружает данные курсов из CSV (id, views, likes, created_at).
+        - Для каждого курса вычисляет общий вес как взвешенную сумму:
+            weight = views * w_views + likes * w_likes + novelty_score * w_novelty
+          где novelty_score = scale * exp(-age_days * ln2 / half_life).
+        - Сортирует курсы по убыванию веса и возвращает top-N идентификаторов.
+
+        Параметры:
+            csv_path (str, optional): путь к CSV-файлу. По умолчанию ищется в директории скрипта.
+        """
     def __init__(self, csv_path: str = None):
         self.csv_path = csv_path or os.path.join(os.path.dirname(__file__), 'courses.csv')
         self.courses_cache = None
 
     def load_courses_from_csv(self, file_path: str = None) -> List[Dict[str, Any]]:
+        """
+            Загружает данные курсов из CSV-файла.
+
+            Ожидаемые колонки: id, views, likes, created_at (формат YYYY-MM-DD).
+            Возвращает список словарей с ключами id, views, likes, created_at (date).
+            При отсутствии файла возвращает пустой список.
+            """
         path = file_path or self.csv_path
 
         try:
@@ -36,18 +55,38 @@ class CourseRecommender:
             return courses
 
         except FileNotFoundError:
-            print(f"Файл {path} не найден")
-            return []
+            raise FileNotFoundError(f"CSV файл не найден: {path}")
         except Exception as e:
-            print(f"Ошибка при загрузке CSV: {e}")
-            return []
+            raise RuntimeError(f"Ошибка при загрузке CSV: {e}")
+        except pd.errors.EmptyDataError:
+            raise ValueError(f"CSV файл пуст: {path}")
 
     def get_courses(self) -> List[Dict[str, Any]]:
         if self.courses_cache is not None:
             return self.courses_cache
         return self.load_courses_from_csv()
 
-    def calculate_novelty_score(self, created_at, current_date, half_life=90, scale=1000):
+    def calculate_novelty_score(self,
+                                created_at: Union[date, datetime],
+                                current_date: date,
+                                half_life: int = 90,
+                                scale: int = 1000) -> float:
+        """
+            Вычисляет оценку новизны курса.
+
+            Оценка вычисляется по формуле экспоненциального затухания:
+                novelty = scale * exp(-age * ln(2) / half_life)
+            где age = (current_date - created_at).days.
+
+            Args:
+                created_at: дата создания курса (date или datetime).
+                current_date: текущая дата (date).
+                half_life: период полураспада в днях (по умолчанию 90).
+                scale: множитель для приведения к масштабу других признаков (по умолчанию 1000).
+
+            Returns:
+                float: оценка новизны (убывает с возрастом курса).
+            """
         if isinstance(created_at, datetime):
             created_at = created_at.date()
         age_days = (current_date - created_at).days
@@ -145,19 +184,3 @@ class CourseRecommender:
                   f"создан: {course['created_at']})")
 
         return result
-
-
-def main():
-    recommender = CourseRecommender()
-    result = recommender.get_top_n_courses(top_n=10)
-    print(f"Результат на выходе:{result}")
-    print("\n" + "=" * 50)
-    print("РЕЗУЛЬТАТ:")
-    print("=" * 50)
-    print(f"ID курсов: {result['course_id']}")
-    print(f"Всего: {result['total']}")
-    print(f"Параметры: {result['weights_used']}")
-
-
-if __name__ == "__main__":
-    main()

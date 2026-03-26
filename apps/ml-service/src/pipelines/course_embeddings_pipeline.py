@@ -6,11 +6,12 @@ import numpy as np
 from numpy.typing import NDArray
 
 
-from sqlalchemy.engine import Row
 from sqlalchemy.ext.asyncio import AsyncSession
 
 
-from ..db.repositories import get_courses_with_tags_raw, get_course_by_id
+from ..db.repositories import get_course_by_id
+from ..db.services.course_services import iterate_courses_with_tags
+from ..db.utils.mappers import normalized_tag_strings
 from ..db.models import Course, User, Tag
 from ..engine.chroma_client import ChromaClient
 from ..engine.embeddings import EmbeddingEngine
@@ -39,48 +40,45 @@ class CourseEmbeddingPipeline:
 
     async def index_all_courses(self) -> None:
         """
-        Paginate through all courses (``LIMIT`` rows per batch), build embedding texts,
-        compute vectors, and upsert ids, documents, embeddings, and metadata into Chroma.
+        Paginate through all courses in batches via ``iterate_courses_with_tags``,
+        build embedding texts, compute vectors, and upsert into Chroma.
         :return: None
         """
-        offset = 0
-
-        while True:
-            courses_from_db: List[Row[Any]] = await get_courses_with_tags_raw(
-                session=self.__db_session, limit=LIMIT, offset=offset
-            )
-            if not courses_from_db:
-                break
-
-            rows_with_tags: List[tuple[Row[Any], List[str]]] = []
-            for row in courses_from_db:
-                raw_tags = list(row.tags) if row.tags is not None else []
-                tag_list = [str(tag) for tag in raw_tags if tag is not None]
-                rows_with_tags.append((row, tag_list))
+        async for batch in iterate_courses_with_tags(
+            self.__db_session, batch_size=LIMIT
+        ):
+            courses_with_tags: List[tuple[dict, List[str]]] = [
+                (course, normalized_tag_strings(course)) for course in batch
+            ]
 
             courses_texts = [
                 self.__embedding_engine.prepare_course(
-                    name=row.name,
-                    description=row.description or "",
-                    difficulty=row.difficulty or "",
+                    name=course["name"],
+                    description=course.get("description") or "",
+                    difficulty=course.get("difficulty") or "",
                     tags=tags,
                 )
-                for row, tags in rows_with_tags
+                for course, tags in courses_with_tags
             ]
 
-            list_of_embeddings: NDArray[np.float32] = self.__embedding_engine.generate_batch(courses_texts)
+            list_of_embeddings: NDArray[np.float32] = self.__embedding_engine.generate_batch(
+                courses_texts
+            )
             embeddings: List[NDArray[np.float32]] = [
-                np.asarray(list_of_embeddings[i], dtype=np.float32) for i in range(list_of_embeddings.shape[0])
+                np.asarray(list_of_embeddings[i], dtype=np.float32)
+                for i in range(list_of_embeddings.shape[0])
             ]
 
-            ids: List[str] = [str(row.course_id) for row, tags in rows_with_tags]
+            ids: List[str] = [str(course["course_id"]) for course, _ in courses_with_tags]
             metadatas: List[Dict[str, Any]] = [
                 {
-                    "course_id": int(row.course_id),
-                    "difficulty": str(row.difficulty) if row.difficulty is not None else "",
+                    "course_id": int(course["course_id"]),
+                    "difficulty": str(course["difficulty"])
+                    if course.get("difficulty") is not None
+                    else "",
                     "tags": ",".join(tags),
                 }
-                for row, tags in rows_with_tags
+                for course, tags in courses_with_tags
             ]
 
             self.__chroma_client.upsert_courses(
@@ -89,8 +87,6 @@ class CourseEmbeddingPipeline:
                 embeddings=embeddings,
                 metadatas=metadatas,
             )
-
-            offset += LIMIT
 
     async def get_content_based_recommendations(
         self,
@@ -119,7 +115,9 @@ class CourseEmbeddingPipeline:
         recommended_courses: List[Optional[Course]] = []
 
         for course_id_raw in recommended_course_ids:
-            course: Optional[Course] = await get_course_by_id(self.__db_session, int(course_id_raw))
+            course: Optional[Course] = await get_course_by_id(
+                self.__db_session, int(course_id_raw)
+            )
             if course is not None:
                 recommended_courses.append(course)
 

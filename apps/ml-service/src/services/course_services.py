@@ -1,5 +1,5 @@
-from db.repositories import get_courses, get_courses_with_tags_raw
-from utils.mappers import courses_with_tags_to_dict
+from src.db.repositories import get_courses, get_courses_with_tags_raw
+from src.utils.mappers import courses_with_tags_to_dict
 
 
 async def iterate_courses(session, batch_size=1000):

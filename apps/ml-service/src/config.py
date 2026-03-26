@@ -8,7 +8,7 @@ DB_USER = os.getenv("DB_USER")
 DB_PASSWORD = os.getenv("DB_PASSWORD")
 DB_NAME = os.getenv("DB_NAME")
 
-if not all([DB_HOST, DB_USER, DB_PASSWORD, DB_NAME]):
+if not all([DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DB_NAME]):
     raise RuntimeError("Database environment variables are not fully set")
 
 DB_PASSWORD = quote_plus(DB_PASSWORD)
@@ -19,8 +19,3 @@ DATABASE_URL = (
 
 
 DATA_PATH = "data/raw/"
-
-USERS_CSV = "users.csv"
-ITEMS_CSV = "items.csv"
-EXPLICIT_RATING_CSV = "explicit_rating.csv"
-IMPLICIT_RATING_CSV = "implicit_rating.csv"

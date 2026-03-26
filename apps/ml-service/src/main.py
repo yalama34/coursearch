@@ -1,5 +1,3 @@
-# api/main.py
-
 import logging
 
 from fastapi import FastAPI, BackgroundTasks

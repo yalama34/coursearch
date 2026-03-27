@@ -1,10 +1,10 @@
+from typing import List, Dict, Optional
+
+
 import chromadb
 import numpy as np
-
-
 from chromadb.types import Collection
 from chromadb import QueryResult
-from typing import List, Dict, Optional
 from numpy.typing import NDArray
 
 

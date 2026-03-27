@@ -1,7 +1,8 @@
 from typing import List
+
+
 from numpy.typing import NDArray
 import numpy as np
-
 from sentence_transformers import SentenceTransformer
 
 

@@ -10,8 +10,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 
 from ..db.repositories import get_course_by_id
-from ..db.services.course_services import iterate_courses_with_tags
-from ..db.utils.mappers import normalized_tag_strings
+from ..services.course_services import iterate_courses_with_tags
+from ..utils.mappers import normalized_tag_strings
 from ..db.models import Course, User, Tag
 from ..engine.chroma_client import ChromaClient
 from ..engine.embeddings import EmbeddingEngine

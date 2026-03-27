@@ -31,3 +31,11 @@ def course_with_tags_row_to_dict(row) -> dict:
 def courses_with_tags_to_dict(rows) -> list[dict]:
     """Convert raw query results of courses with tags into a list of dictionaries."""
     return [course_with_tags_row_to_dict(r) for r in rows]
+
+
+def normalized_tag_strings(course: dict) -> list[str]:
+    """
+    Tags as a clean list of strings for embeddings / Chroma metadata.
+    """
+    raw = list(course["tags"]) if course.get("tags") is not None else []
+    return [str(t) for t in raw if t is not None]

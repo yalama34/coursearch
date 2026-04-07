@@ -1,5 +1,5 @@
 from typing import List
-from db.models import Course
+from src.db.models import Course
 
 
 def course_to_dict(course: Course) -> dict:

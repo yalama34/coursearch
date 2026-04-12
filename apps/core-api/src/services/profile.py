@@ -5,7 +5,6 @@ from sqlalchemy import select
 
 from .base import BaseService
 from ..db.database import SessionDep
-from ..db.models.user import User
 from ..db.repositories.user_repository import UserRepository
 
 

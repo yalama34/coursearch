@@ -3,9 +3,10 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from sqlalchemy import text
 
-from .db.database import engine
-from .routers.profile import router as profile_router
-from .routers.health import router as health_router
+from src.db.database import engine
+from src.routers.profile import router as profile_router
+from src.routers.health import router as health_router
+from src.dependencies.ml_client import ml_client
 
 
 @asynccontextmanager
@@ -23,6 +24,7 @@ async def lifespan(app: FastAPI):
 
     # shotdown
     await engine.dispose()
+    await ml_client.close()
 
 
 app = FastAPI(

@@ -1,0 +1,59 @@
+import asyncio
+
+import httpx
+
+from .schemas import RecommendationResponse
+
+class MLServiceClient:
+    def __init__(self, base_url: str = "http://ml-service:8001"):
+        self.client = httpx.AsyncClient(
+            base_url=base_url,
+            timeout=httpx.Timeout(timeout=5.0, connect=2.0),
+        )
+
+    async def _request_with_retry(
+            self,
+            method: str,
+            url: str,
+            **kwargs
+    ) -> dict:
+        for attempt in range(3):
+            try:
+                response = await self.client.request(method, url, **kwargs)
+                response.raise_for_status()
+                return response.json()
+
+            except httpx.RequestError:
+                if attempt == 2:
+                    raise
+                await asyncio.sleep(0.5)
+
+            except httpx.HTTPStatusError as e:
+                if 400 <= e.response.status_code < 500:
+                    raise
+                if attempt == 2:
+                    raise
+                await asyncio.sleep(0.5)
+
+        raise RuntimeError("ML service unavailable")
+
+    async def get(self, path: str, params: dict | None = None) -> dict:
+        return await self._request_with_retry("GET", path, params=params)
+
+    async def post(self, path: str, json: dict | None = None) -> dict:
+        return await self._request_with_retry("POST", path, json=json)
+
+    async def close(self):
+        await self.client.aclose()
+
+
+    async def get_recommendations(
+        self,
+        user_id: int,
+        limit: int = 10,
+    ) -> RecommendationResponse:
+        data = await self.get(
+            path="/recommendations",
+            params={"user_id": user_id, "limit": limit},
+        )
+        return RecommendationResponse.model_validate(data)

@@ -8,7 +8,7 @@ from src.services.recommendation import RecommendationService
 router = APIRouter(tags=["recommendations"], prefix="/recommendations")
 
 
-@router.get("/", response_model=RecommendationResponse)
+@router.get("", response_model=RecommendationResponse)
 async def get_recommendations(
         user_id: int,
         limit: int = 10,
@@ -17,7 +17,7 @@ async def get_recommendations(
     service = RecommendationService(ml_client)
 
     try:
-        return await service.get_recommendations(user_id, limit)
+        return await service.get_recommendations(user_id, limit, True)
 
     except Exception:
         raise HTTPException(

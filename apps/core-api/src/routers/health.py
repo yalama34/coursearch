@@ -7,7 +7,7 @@ from src.db.database import engine
 router = APIRouter(tags=["health"], prefix="/health")
 
 
-@router.get("/")
+@router.get("")
 async def health():
 
     try:

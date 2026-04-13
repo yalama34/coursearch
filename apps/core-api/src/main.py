@@ -4,9 +4,11 @@ from fastapi import FastAPI
 from sqlalchemy import text
 
 from src.db.database import engine
+from src.dependencies.ml_client import ml_client
+
 from src.routers.profile import router as profile_router
 from src.routers.health import router as health_router
-from src.dependencies.ml_client import ml_client
+from src.routers.recommendation import router as recommendation_router
 
 
 @asynccontextmanager
@@ -34,3 +36,4 @@ app = FastAPI(
 
 app.include_router(profile_router)
 app.include_router(health_router)
+app.include_router(recommendation_router)

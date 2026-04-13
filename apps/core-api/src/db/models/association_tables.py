@@ -1,6 +1,6 @@
 from sqlalchemy import Table, Column, Integer, ForeignKey
 
-from ..database import Base
+from src.db.database import Base
 
 
 course_tags = Table(

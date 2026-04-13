@@ -1,5 +1,5 @@
 from src.services.base import BaseService
-from src.db.database import SessionDep
+from src.dependencies.db import SessionDep
 from src.db.repositories.user_repository import UserRepository
 
 

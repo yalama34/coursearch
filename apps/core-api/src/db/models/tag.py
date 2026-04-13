@@ -3,8 +3,8 @@ from typing import List
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import String
 
-from ..database import Base
-from .association_tables import course_tags, user_tags
+from src.db.database import Base
+from src.db.models.association_tables import course_tags, user_tags
 
 
 class Tag(Base):

@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
 
-from src.db.database import SessionDep
+from src.dependencies.db import SessionDep
 from src.services.profile import ProfileService
 
 

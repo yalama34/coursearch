@@ -1,5 +1,5 @@
-from ..integrations.ml_service.client import MLServiceClient
-from ..settings import settings
+from src.integrations.ml_service.client import MLServiceClient
+from src.settings import settings
 
 ml_client = MLServiceClient(base_url=settings.ML_SERVICE_URL)
 

@@ -1,8 +1,8 @@
 from sqlalchemy import select
 
-from .base_repository import BaseRepository
-from ...domain.enum.action_type import ActionType
-from ..models import (
+from src.db.repositories.base_repository import BaseRepository
+from src.domain.enum.action_type import ActionType
+from src.db.models import (
     User,
     Tag,
     Course,

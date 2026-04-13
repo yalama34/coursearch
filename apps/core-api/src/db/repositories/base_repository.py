@@ -1,4 +1,4 @@
-from ..database import SessionDep
+from src.db.database import SessionDep
 
 
 class BaseRepository:

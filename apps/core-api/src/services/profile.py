@@ -1,11 +1,6 @@
-from typing import Any
-
-from fastapi import HTTPException
-from sqlalchemy import select
-
-from .base import BaseService
-from ..db.database import SessionDep
-from ..db.repositories.user_repository import UserRepository
+from src.services.base import BaseService
+from src.db.database import SessionDep
+from src.db.repositories.user_repository import UserRepository
 
 
 class ProfileService(BaseService):

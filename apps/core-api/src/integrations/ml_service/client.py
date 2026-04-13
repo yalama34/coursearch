@@ -2,7 +2,7 @@ import asyncio
 
 import httpx
 
-from .schemas import RecommendationResponse
+from src.integrations.ml_service.schemas import RecommendationResponse
 
 class MLServiceClient:
     def __init__(self, base_url: str = "http://ml-service:8001"):

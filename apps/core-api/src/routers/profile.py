@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException
 
-from ..db.database import SessionDep
-from ..services.profile import ProfileService
+from src.db.database import SessionDep
+from src.services.profile import ProfileService
 
 
 router = APIRouter(tags=["profile"], prefix="/profile")

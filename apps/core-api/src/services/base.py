@@ -1,4 +1,4 @@
-from ..db.database import SessionDep
+from src.db.database import SessionDep
 
 
 class BaseService:

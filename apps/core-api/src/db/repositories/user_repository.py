@@ -13,11 +13,16 @@ from src.db.models import (
 
 
 class UserRepository(BaseRepository):
+    """
+    Repository to make selects from user table
+    """
     async def get_user(
             self,
             user_id: int
     ) -> User | None:
-
+        """
+        Get all user info by user ID
+        """
         stmt = (
             select(User)
             .where(User.user_id == user_id)
@@ -31,7 +36,9 @@ class UserRepository(BaseRepository):
             self,
             user_id: int
     ) -> list[str]:
-
+        """
+        Get all user tags by user ID
+        """
         stmt = (
             select(Tag.name)
             .join(user_tags, Tag.tag_id == user_tags.c.tag_id)
@@ -46,7 +53,9 @@ class UserRepository(BaseRepository):
             self,
             user_id: int
     ) -> list[CourseShort]:
-
+        """
+        Get all user liked courses by user ID
+        """
         stmt = (
             select(
                 Course.course_id,

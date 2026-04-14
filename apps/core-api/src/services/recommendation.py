@@ -15,6 +15,10 @@ class RecommendationService:
             limit: int = 10,
             placeholder: bool = False,
     ) -> RecommendationResponse:
+        """
+        Get user recommendations by user ID
+        Return empty recommendations if placeholder is True
+        """
         if placeholder:
             return RecommendationResponse(
                 user_id=user_id,

@@ -15,6 +15,10 @@ class ProfileService:
             self,
             user_id: int,
     ) -> ProfileResponse | None:
+        """
+        Get profile info by user ID
+        Returns None if profile info not found
+        """
         user = await self.repository.get_user(user_id)
 
         if not user:

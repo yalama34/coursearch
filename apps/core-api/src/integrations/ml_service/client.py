@@ -17,6 +17,9 @@ class MLServiceClient:
             url: str,
             **kwargs
     ) -> dict:
+        """
+        Base method for making requests to ML service
+        """
         for attempt in range(3):
             try:
                 response = await self.client.request(method, url, **kwargs)
@@ -38,12 +41,21 @@ class MLServiceClient:
         raise RuntimeError("ML service unavailable")
 
     async def get(self, path: str, params: dict | None = None) -> dict:
+        """
+        Make a GET request to ML service
+        """
         return await self._request_with_retry("GET", path, params=params)
 
     async def post(self, path: str, json: dict | None = None) -> dict:
+        """
+        Make a POST request to ML service
+        """
         return await self._request_with_retry("POST", path, json=json)
 
     async def close(self):
+        """
+        Close the connection to the ML service
+        """
         await self.client.aclose()
 
 
@@ -52,6 +64,11 @@ class MLServiceClient:
         user_id: int,
         limit: int = 10,
     ) -> RecommendationResponse:
+        """
+        Get recommendations for a user by user ID
+        Return number of limit recommendations (10 as default)
+        Make GET request to ML service
+        """
         data = await self.get(
             path="/recommendations",
             params={"user_id": user_id, "limit": limit},

@@ -13,7 +13,9 @@ from src.routers.recommendation import router as recommendation_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-
+    """
+    Manage startup and shutdown events for the FastAPI application.
+    """
     # startup
     try:
         async with engine.begin() as conn:

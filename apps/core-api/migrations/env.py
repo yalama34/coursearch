@@ -1,37 +1,18 @@
-import os
-import sys
 import asyncio
 from logging.config import fileConfig
-from urllib.parse import quote_plus
 
 from sqlalchemy import pool
 from sqlalchemy.ext.asyncio import async_engine_from_config
-
 from alembic import context
 
-sys.path.append(os.path.abspath("src"))
-
-from db.database import Base
-import db.models
+import src.db.models
+from src.db.url import get_database_url
+from src.db.database import Base
 
 
 config = context.config
 
-
-DB_HOST = os.getenv("DB_HOST")
-DB_PORT = os.getenv("DB_PORT")
-DB_USER = os.getenv("DB_USER")
-DB_PASSWORD = os.getenv("DB_PASSWORD")
-DB_NAME = os.getenv("DB_NAME")
-
-if not all([DB_HOST, DB_USER, DB_PASSWORD, DB_NAME]):
-    raise RuntimeError("Database environment variables are not fully set")
-
-DB_PASSWORD = quote_plus(DB_PASSWORD)
-
-DATABASE_URL = (
-    f"postgresql+asyncpg://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
-)
+DATABASE_URL = get_database_url()
 
 config.set_main_option("sqlalchemy.url", DATABASE_URL)
 

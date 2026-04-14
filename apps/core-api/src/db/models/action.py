@@ -3,7 +3,7 @@ from datetime import datetime, timezone
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import ForeignKey, String, DateTime
 
-from ..database import Base
+from src.db.database import Base
 
 
 class Action(Base):

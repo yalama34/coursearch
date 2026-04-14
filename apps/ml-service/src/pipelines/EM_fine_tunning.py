@@ -1,8 +1,8 @@
+from pathlib import Path
+
 import torch
 from torch.utils.data import DataLoader, WeightedRandomSampler
 from sentence_transformers import SentenceTransformer, losses
-
-from pathlib import Path
 
 from .synthetic_data_cleaner_pipeline import get_data_for_pipeline
 from .model_evaluation import ExtendedMetricsEvaluator, evaluate_and_plot

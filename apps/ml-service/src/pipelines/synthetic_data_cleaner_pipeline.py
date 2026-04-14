@@ -1,8 +1,10 @@
+from pathlib import Path
+
 import pandas as pd
 import matplotlib.pyplot as plt
-from pathlib import Path
 from sentence_transformers import InputExample
 from sklearn.model_selection import train_test_split
+
 
 SYNTHETIC_DIR = Path(__file__).resolve().parent.parent / "data" / "synthetic"
 RANDOM_STATE = 42

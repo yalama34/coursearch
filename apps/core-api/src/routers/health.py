@@ -9,7 +9,9 @@ router = APIRouter(tags=["health"], prefix="/health")
 
 @router.get("")
 async def health():
-
+    """
+    Health check endpoint.
+    """
     try:
         async with engine.connect() as conn:
             await conn.execute(text("SELECT 1"))

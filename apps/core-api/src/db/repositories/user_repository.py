@@ -2,6 +2,7 @@ from sqlalchemy import select
 
 from src.db.repositories.base_repository import BaseRepository
 from src.domain.enum.action_type import ActionType
+from src.schemas.course import CourseShort
 from src.db.models import (
     User,
     Tag,
@@ -15,7 +16,7 @@ class UserRepository(BaseRepository):
     async def get_user(
             self,
             user_id: int
-    ) -> User:
+    ) -> User | None:
 
         stmt = (
             select(User)
@@ -38,13 +39,13 @@ class UserRepository(BaseRepository):
         )
         result = await self.session.execute(stmt)
 
-        return [row[0] for row in result.fetchall()]
+        return [row[0] for row in result.all()]
 
 
     async def get_user_liked_courses(
             self,
             user_id: int
-    ) -> list[dict]:
+    ) -> list[CourseShort]:
 
         stmt = (
             select(
@@ -61,9 +62,9 @@ class UserRepository(BaseRepository):
         result = await self.session.execute(stmt)
 
         return [
-            {
-                "course_id": row.course_id,
-                "name": row.name
-            }
-            for row in result.fetchall()
+            CourseShort(
+                course_id=row.course_id,
+                name=row.name
+            )
+            for row in result.all()
         ]

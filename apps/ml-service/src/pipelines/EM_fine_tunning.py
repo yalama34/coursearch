@@ -4,7 +4,7 @@ from sentence_transformers import SentenceTransformer, losses
 
 from pathlib import Path
 
-from .synthetic_data_cleaner_pipeline import train_examples, val_examples, df_test
+from .synthetic_data_cleaner_pipeline import get_data_for_pipeline
 from .model_evaluation import ExtendedMetricsEvaluator, evaluate_and_plot
 
 
@@ -15,6 +15,8 @@ EPSILON = 0.01
 EPOCHS = 8
 BATCH_SIZE = 32
 LR = 2e-5
+
+train_examples, val_examples, df_test = get_data_for_pipeline()
 
 val_sentences1 = [ex.texts[0] for ex in val_examples]
 val_sentences2 = [ex.texts[1] for ex in val_examples]

@@ -70,45 +70,54 @@ def analyze_distributions(df: pd.DataFrame) -> None:
     plt.close()
     print(f"\nГрафик распределений сохранен в {plot_path}")
 
-dfs = []
-for category in ["A", "B", "C", "D", "E"]:
-    path = SYNTHETIC_DIR / f"{category}.json"
-    if path.exists():
-        df_cur = pd.read_json(path)
-        df_cur["category"] = category
-        dfs.append(df_cur)
+def get_data_for_pipeline() -> list[list[InputExample] | pd.DataFrame]:
+    """
+    Parses synthetic data files, makes split to test|val|train and returns data for fine-tuning pipeline
+    :return: [``train_examples``, ``val_examples``, ``df_test``], where
+    ``train_examples`` and ``val_examples`` is a list of ``InputExample`` objects
+    ``df_test`` is a pandas DataFrame containing the test data
+    """
+    dfs = []
+    for category in ["A", "B", "C", "D", "E"]:
+        path = SYNTHETIC_DIR / f"{category}.json"
+        if path.exists():
+            df_cur = pd.read_json(path)
+            df_cur["category"] = category
+            dfs.append(df_cur)
 
-if dfs:
-    df = pd.concat(dfs, ignore_index=True)
-    df = clean_data(df)
-    analyze_distributions(df)
-    
-    train_parts: list[pd.DataFrame] = []
-    val_parts: list[pd.DataFrame] = []
-    test_parts: list[pd.DataFrame] = []
-    
-    for category in sorted(df["category"].unique()):
-        sub = df[df["category"] == category]
-        if len(sub) < 3:
-            continue
-            
-        train_val, test = train_test_split(
-            sub, test_size=0.2, random_state=RANDOM_STATE, shuffle=True
-        )
-        train, val = train_test_split(
-            train_val, test_size=0.25, random_state=RANDOM_STATE, shuffle=True
-        )
-        train_parts.append(train)
-        val_parts.append(val)
-        test_parts.append(test)
-    
-    df_train = pd.concat(train_parts, ignore_index=True) if train_parts else pd.DataFrame()
-    df_val = pd.concat(val_parts, ignore_index=True) if val_parts else pd.DataFrame()
-    df_test = pd.concat(test_parts, ignore_index=True) if test_parts else pd.DataFrame()
-    
-    train_examples = df_to_input_examples(df_train) if not df_train.empty else []
-    val_examples = df_to_input_examples(df_val) if not df_val.empty else []
-else:
-    df_test = pd.DataFrame()
-    train_examples = []
-    val_examples = []
+    if dfs:
+        df = pd.concat(dfs, ignore_index=True)
+        df = clean_data(df)
+        analyze_distributions(df)
+
+        train_parts: list[pd.DataFrame] = []
+        val_parts: list[pd.DataFrame] = []
+        test_parts: list[pd.DataFrame] = []
+
+        for category in sorted(df["category"].unique()):
+            sub = df[df["category"] == category]
+            if len(sub) < 3:
+                continue
+
+            train_val, test = train_test_split(
+                sub, test_size=0.2, random_state=RANDOM_STATE, shuffle=True
+            )
+            train, val = train_test_split(
+                train_val, test_size=0.25, random_state=RANDOM_STATE, shuffle=True
+            )
+            train_parts.append(train)
+            val_parts.append(val)
+            test_parts.append(test)
+
+        df_train = pd.concat(train_parts, ignore_index=True) if train_parts else pd.DataFrame()
+        df_val = pd.concat(val_parts, ignore_index=True) if val_parts else pd.DataFrame()
+        df_test = pd.concat(test_parts, ignore_index=True) if test_parts else pd.DataFrame()
+
+        train_examples = df_to_input_examples(df_train) if not df_train.empty else []
+        val_examples = df_to_input_examples(df_val) if not df_val.empty else []
+    else:
+        df_test = pd.DataFrame()
+        train_examples = []
+        val_examples = []
+
+    return [train_examples, val_examples, df_test]

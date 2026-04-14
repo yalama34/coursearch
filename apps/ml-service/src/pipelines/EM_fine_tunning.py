@@ -1,8 +1,8 @@
 import torch
 from torch.utils.data import DataLoader, WeightedRandomSampler
 from sentence_transformers import SentenceTransformer, losses
-from pathlib import Path
 
+from pathlib import Path
 
 from .synthetic_data_cleaner_pipeline import train_examples, val_examples, df_test
 from .model_evaluation import ExtendedMetricsEvaluator, evaluate_and_plot
@@ -11,17 +11,14 @@ from .model_evaluation import ExtendedMetricsEvaluator, evaluate_and_plot
 OUT = Path(__file__).resolve().parent.parent.parent / "models" / "course-emb-v1"
 OUT.mkdir(parents=True, exist_ok=True)
 
-
 EPSILON = 0.01
 EPOCHS = 8
 BATCH_SIZE = 32
 LR = 2e-5
 
-
 val_sentences1 = [ex.texts[0] for ex in val_examples]
 val_sentences2 = [ex.texts[1] for ex in val_examples]
 val_scores = [float(ex.label) for ex in val_examples]
-
 
 static_val_evaluator = ExtendedMetricsEvaluator(
     sentences1=val_sentences1,
@@ -33,11 +30,9 @@ static_val_evaluator = ExtendedMetricsEvaluator(
     write_csv=True
 )
 
-
 model = SentenceTransformer("paraphrase-multilingual-MiniLM-L12-v2")
 train_loss = losses.CosineSimilarityLoss(model=model)
 train_dataloader = DataLoader(train_examples, batch_size=BATCH_SIZE, shuffle=True)
-
 
 def fine_tune() -> None:
     """

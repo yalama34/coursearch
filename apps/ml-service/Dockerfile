@@ -14,7 +14,7 @@ RUN pip install --no-cache-dir --upgrade pip
 COPY requirements.txt .
 
 RUN --mount=type=cache,target=/root/.cache/pip \
-    pip install --no-cache-dir --prefer-binary -r requirements.txt
+    pip install --no-cache-dir --prefer-binary -r requirements.txt -i https://mirrors.aliyun.com/pypi/simple/
 
 COPY . .
 

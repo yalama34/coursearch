@@ -44,8 +44,7 @@ class ExtendedMetricsEvaluator(SentenceEvaluator):
         cosine_val_score = self.scores
 
         mae = mean_absolute_error(cosine_val_score, cosine_score)
-        mse = mean_squared_error(cosine_val_score, cosine_score)
-        rmse = np.sqrt(mse)
+        rmse = np.sqrt(mean_squared_error(cosine_val_score, cosine_score))
         r2 = r2_score(cosine_val_score, cosine_score)
         max_err = max_error(cosine_val_score, cosine_score)
         spearman, _ = spearmanr(cosine_score, cosine_val_score)

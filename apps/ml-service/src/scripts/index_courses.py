@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from ..common.logging_config import configure_logging
 
 from ..db.database import get_session, engine
-from ..pipelines.course_embeddings_pipeline import CourseEmbeddingPipeline
+from ..pipelines.course_index_pipeline import CourseEmbeddingPipeline
 
 logger = logging.getLogger(__name__)
 

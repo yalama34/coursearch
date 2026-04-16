@@ -67,6 +67,9 @@ services:
       HF_HOME: /models
       TRANSFORMERS_CACHE: /models
       SENTENCE_TRANSFORMERS_HOME: /models
+      #LLM
+      LLM_BASE_URL: ${LLM_BASE_URL}
+      LLM_API_KEY: ${LLM_API_KEY}
 
     volumes:
       - ./data:/data

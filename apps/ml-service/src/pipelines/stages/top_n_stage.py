@@ -1,46 +1,72 @@
 import math
-
-
 from datetime import datetime, date
 from typing import List, Dict, Any, Optional
+
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
 
+from src.db.models import Course, Action
+from src.schemas.recommendations import RecommendationItem, RecommendationExplanation
+from src.domain.recommendation.pipeline_order import StageName
 
-from ..db.models import Course, Action
 
-
-class CourseTopNPipeline:
-    """
-    Popularity and novelty-based course recommendations.
-
-    Behaviour:
-    - Loads course aggregates from the DB (id, views, likes, created_at).
-    - Computes a scalar weight per course as a weighted sum:
-        weight = views * w_views + likes * w_likes + novelty_score * w_novelty
-      where novelty_score = scale * exp(-age_days * ln(2) / half_life).
-    - Sorts by descending weight and returns the top-N course ids.
-    """
-
+class TopNStage:
     def __init__(self, db_session: AsyncSession = None):
         """
-        :param db_session: Async SQLAlchemy session (optional).
+        :param db_session: Async SQLAlchemy session (optional)
         """
         self.db_session = db_session
-        self.courses_cache = None
 
-    async def load_courses_from_db(self) -> List[Dict[str, Any]]:
+    @property
+    def stage_name(self) -> str:
+        return StageName.TOP_N
+
+    async def process(
+            self,
+            user_id: int,
+            candidates: list[RecommendationItem],
+            limit: int = 10
+    ) -> list[RecommendationItem]:
         """
-        Load per-course aggregates from the database.
+        If candidates is empty: get all courses from db and returns top-limit by their popularity
+        If candidates is not empty: sorts candidates by popularity
+        :param user_id:
+        :param candidates:
+        :param limit:
+        :return:
+        """
 
-        :return: List of dicts with keys:
-            - id (int): course id
-            - views (int): view count
-            - likes (int): like count
-            - created_at (date): creation date
+        candidate_ids = [c.item_id for c in candidates] if candidates else None
 
-        :raises RuntimeError: if the query fails.
-        :raises ValueError: if no DB session was configured.
+        top_data = await self.get_top_n_courses(
+            top_n=limit,
+            candidate_ids=candidate_ids
+        )
+
+        course_ids = top_data.get("course_ids", [])
+        weights_map = top_data.get("weights_map", {})
+
+        result_candidates = []
+
+        for cid in course_ids:
+            existing_candidate = next((c for c in candidates if c.item_id == cid), None)
+
+            if existing_candidate:
+                result_candidates.append(existing_candidate)
+            else:
+                weight = weights_map.get(cid, 0.0)
+                explanation = RecommendationExplanation(
+                    text="Популярный курс",
+                    confidence=weight
+                )
+                item = RecommendationItem(item_id=cid, explanation=explanation)
+                result_candidates.append(item)
+
+        return result_candidates
+
+    async def get_courses(self) -> List[Dict[str, Any]]:
+        """
+        Loads data from db
         """
         if self.db_session is None:
             raise ValueError("Database session is not configured")
@@ -58,7 +84,7 @@ class CourseTopNPipeline:
                     ).filter(Action.action_type == 'like').label('likes')
                 )
                 .outerjoin(Action, Course.course_id == Action.course_id)
-                .group_by(Course.course_id)
+                .group_by(Course.course_id, Course.created_at)
                 .order_by(Course.course_id)
             )
 
@@ -75,19 +101,10 @@ class CourseTopNPipeline:
                 }
                 courses.append(course)
 
-            self.courses_cache = courses
             return courses
 
         except Exception as e:
             raise RuntimeError(f"Failed to load courses from the database: {e}")
-
-    async def get_courses(self) -> List[Dict[str, Any]]:
-        """
-        Return cached courses if present, otherwise load from the database.
-        """
-        if self.courses_cache is not None:
-            return self.courses_cache
-        return await self.load_courses_from_db()
 
     def calculate_novelty_score(self,
                                 created_at: date,
@@ -95,8 +112,12 @@ class CourseTopNPipeline:
                                 half_life: int = 90,
                                 scale: int = 1000) -> float:
         """
-        Novelty score for a course by age (exponential decay).
-        novelty = scale * exp(-age_days * ln(2) / half_life)
+        Counts the novelty score between created_at and current_date
+        :param created_at:
+        :param current_date:
+        :param half_life:
+        :param scale:
+        :return:
         """
         if isinstance(created_at, datetime):
             created_at = created_at.date()
@@ -112,6 +133,15 @@ class CourseTopNPipeline:
                                 current_date: date,
                                 half_life_days: int = 90,
                                 scale: int = 1000) -> float:
+        """
+        Calculates the weight of a course
+        :param course:
+        :param weights:
+        :param current_date:
+        :param half_life_days:
+        :param scale:
+        :return:
+        """
         views_weight = course['views'] * weights.get('views', 0)
         likes_weight = course['likes'] * weights.get('likes', 0)
         novelty_score = self.calculate_novelty_score(
@@ -123,26 +153,24 @@ class CourseTopNPipeline:
 
     async def get_top_n_courses(self,
                                 top_n: int = 10,
+                                candidate_ids: Optional[List[int]] = None,
                                 weights: Optional[Dict[str, float]] = None,
                                 half_life_days: int = 90,
                                 scale: int = 1000) -> Dict[str, Any]:
-        """
-        :return: Dict with keys:
-            - course_ids: ordered list of course ids (highest weight first)
-            - total: number of ids returned
-            - weights_used: weight map used for scoring
-            - half_life_days: novelty half-life in days
-            - scale: novelty scale factor
-            - timestamp: computation date (ISO date string)
-        """
+
         courses = await self.get_courses()
 
         if not courses:
             return {
                 "course_ids": [],
+                "weights_map": {},
                 "total": 0,
                 "error": "No data available for recommendations"
             }
+
+        if candidate_ids is not None:
+            candidate_set = set(candidate_ids)
+            courses = [c for c in courses if c['id'] in candidate_set]
 
         if weights is None:
             weights = {
@@ -154,6 +182,8 @@ class CourseTopNPipeline:
         current_date = date.today()
 
         courses_with_weights = []
+        weights_map = {}
+
         for course in courses:
             weight = self.calculate_course_weight(
                 course, weights, current_date, half_life_days, scale
@@ -165,6 +195,7 @@ class CourseTopNPipeline:
                 'likes': course['likes'],
                 'created_at': course['created_at']
             })
+            weights_map[course['id']] = weight
 
         sorted_courses = sorted(
             courses_with_weights,
@@ -175,6 +206,7 @@ class CourseTopNPipeline:
 
         result = {
             "course_ids": [course['id'] for course in top_courses],
+            "weights_map": weights_map,
             "total": len(top_courses),
             "weights_used": weights,
             "half_life_days": half_life_days,

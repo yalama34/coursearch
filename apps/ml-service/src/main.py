@@ -5,7 +5,8 @@ from sqlalchemy import text
 
 from src.db.database import get_session, engine
 from src.pipelines.load_csv_pipeline import load_csv_pipeline
-from src.pipelines.course_embeddings_pipeline import CourseEmbeddingPipeline
+from src.pipelines.course_index_pipeline import CourseIndexPipeline
+from src.routers.recommendations import router as recommendations_router
 
 logger = logging.getLogger(__name__)
 
@@ -22,7 +23,7 @@ async def health():
 
         return {
             "status": "ok",
-            "service": "core-api"
+            "service": "ml-service",
         }
 
     except Exception:
@@ -46,7 +47,7 @@ async def run_load_data(background_tasks: BackgroundTasks):
 async def run_index_pipeline():
     """Index all courses in the database"""
     async for session in get_session():
-        pipeline = CourseEmbeddingPipeline(session=session)
+        pipeline = CourseIndexPipeline(session=session)
         await pipeline.index_all_courses()
 
 
@@ -57,3 +58,5 @@ async def run_index(background_tasks: BackgroundTasks):
     background_tasks.add_task(run_index_pipeline)
 
     return {"status": "started"}
+
+app.include_router(recommendations_router)

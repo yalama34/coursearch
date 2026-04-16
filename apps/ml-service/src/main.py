@@ -3,10 +3,13 @@ import logging
 from fastapi import FastAPI, BackgroundTasks
 from sqlalchemy import text
 
+from src.common.logging_config import configure_logging
 from src.db.database import get_session, engine
 from src.pipelines.load_csv_pipeline import load_csv_pipeline
 from src.pipelines.course_index_pipeline import CourseIndexPipeline
 from src.routers.recommendations import router as recommendations_router
+
+configure_logging()
 
 logger = logging.getLogger(__name__)
 

@@ -1,4 +1,5 @@
 import os
+import logging
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
@@ -14,6 +15,8 @@ from src.db.models import Course, User
 from src.integrations.llm.client import LLMClient
 from src.integrations.llm.services.explanation import LLMExplanation
 
+
+logger = logging.getLogger(__name__)
 
 class ContentBasedStage:
     def __init__(self, session: AsyncSession):
@@ -33,6 +36,8 @@ class ContentBasedStage:
             candidates: list[RecommendationItem],
             limit: int = 10
     ) -> list[RecommendationItem]:
+        logger.info(
+            f"[{self.stage_name}] Starting ContentBasedStage for user_id={user_id}. Candidates count: {len(candidates) if candidates else 0}, limit={limit}")
         """
         If ``candidates`` is empty finds the needed candidates in all db.
         If ``candidates`` is not empty reranking it by relevancy.
@@ -46,6 +51,7 @@ class ContentBasedStage:
         user = result.scalar_one_or_none()
 
         if not user or not user.tags:
+            logger.info("No tags found for user %s", user_id)
             return candidates
 
         user_tags_list = [tag.name for tag in user.tags]
@@ -55,6 +61,7 @@ class ContentBasedStage:
         filters = None
 
         if candidates:
+            logger.info(f"[{self.stage_name}] Got candidates from previous stage. Reranking them...")
             candidate_ids = [int(c.item_id) for c in candidates]
 
             if len(candidate_ids) == 1:
@@ -80,6 +87,7 @@ class ContentBasedStage:
             if candidate.item_id not in final_course_ids:
                 final_course_ids.append(candidate.item_id)
         if not final_course_ids:
+            logger.info(f"[{self.stage_name}] No courses found for user %s", user_id)
             return []
 
         courses_query = (
@@ -126,4 +134,5 @@ class ContentBasedStage:
             item = RecommendationItem(item_id=cid, explanation=explanation)
             result_candidates.append(item)
 
+        logger.info(f"[{self.stage_name}] Finished ContentBasedStage for user_id={user_id}.\nReturned {len(result_candidates)} items")
         return result_candidates

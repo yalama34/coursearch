@@ -27,6 +27,5 @@ async def main():
         await engine.dispose()
 
 if __name__ == "__main__":
-    configure_logging()
     exit_code = asyncio.run(main())
     sys.exit(exit_code)

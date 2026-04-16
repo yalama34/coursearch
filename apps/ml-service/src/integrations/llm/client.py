@@ -1,7 +1,10 @@
 import os
+import logging
 
 from openai import AsyncOpenAI
 
+
+logger = logging.getLogger(__name__)
 
 class LLMClient:
     def __init__(self):
@@ -21,6 +24,7 @@ class LLMClient:
         :return:
         """
         try:
+            logging.info("[LLM] Generating response")
             response = await self.__client.chat.completions.create(
                 model="qwen/qwen2.5-vl-7b",
                 messages=[
@@ -29,6 +33,7 @@ class LLMClient:
                 ],
                 temperature=0.7,
             )
+            logging.info("[LLM] Generated response successfully")
             return response.choices[0].message.content
         except Exception as e:
             raise RuntimeError(f"LLM generation failed: {e}")

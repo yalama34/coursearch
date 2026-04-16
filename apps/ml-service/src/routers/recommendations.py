@@ -19,7 +19,7 @@ async def get_recommendations(
     """
     async for session in get_session():
         pipeline = RecommendationPipeline(session=session)
-        pipeline.register_pipeline()
+        await pipeline.register_pipeline()
         results = await pipeline.execute(user_id=user_id, limit=limit)
 
         return RecommendationResponse(user_id=user_id, items=results)

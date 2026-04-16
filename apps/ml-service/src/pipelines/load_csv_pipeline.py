@@ -71,12 +71,24 @@ async def load_csv_pipeline():
     ]].copy()
 
     courses_df["link"] = None
+    courses_df = courses_df.astype(object)
+    courses_df = courses_df.where(courses_df.notna(), None)
 
     # 6. Actions
     actions_df = build_actions(explicit, implicit)
 
     # 7. Users
     users_df = users[["user_id"]].copy()
+    users_df["nickname"] = users_df["user_id"].map(lambda user_id: f"user_{user_id}")
+    users_df["password"] = users_df["user_id"].map(
+        lambda user_id: f"imported_user_{user_id}"
+    )
+    valid_course_ids = set(courses_df["course_id"])
+    valid_user_ids = set(users_df["user_id"])
+    actions_df = actions_df[
+        actions_df["course_id"].isin(valid_course_ids)
+        & actions_df["user_id"].isin(valid_user_ids)
+    ].copy()
 
     # 8. Save to db
     async with async_session_maker() as session:

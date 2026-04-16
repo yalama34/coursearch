@@ -15,7 +15,7 @@ def normalize_explicit(df: pd.DataFrame) -> pd.DataFrame:
         "item_id": "course_id",
         "created_at": "timestamp"
     })
-    df["type"] = "explicit"
+    df["action_type"] = "explicit"
     return df
 
 
@@ -25,7 +25,7 @@ def normalize_implicit(df: pd.DataFrame) -> pd.DataFrame:
         "item_id": "course_id",
         "created_at": "timestamp"
     })
-    df["type"] = "view"
+    df["action_type"] = "view"
     return df
 
 
@@ -40,6 +40,6 @@ def build_actions(
     return actions[[
         "user_id",
         "course_id",
-        "type",
+        "action_type",
         "timestamp"
     ]]

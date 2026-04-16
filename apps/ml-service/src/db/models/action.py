@@ -22,6 +22,7 @@ class Action(Base):
     )
 
     action_type: Mapped[str] = mapped_column(
+        "type",
         String(32),
         nullable=False,
     )

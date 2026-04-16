@@ -1,7 +1,8 @@
 from typing import List, Optional, Any, Tuple
 
 import pandas as pd
-from sqlalchemy import select, insert, func
+from sqlalchemy import select, func
+from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.db.models import Course, Tag, Action, User, course_tags

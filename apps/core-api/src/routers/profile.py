@@ -15,7 +15,7 @@ router = APIRouter(tags=["profile"], prefix="/profile")
 )
 async def get_user_profile(
         user_id: int,
-        session: SessionDep = None,
+        session: SessionDep,
 ) -> ProfileResponse:
     """
     Get user profile by ID.

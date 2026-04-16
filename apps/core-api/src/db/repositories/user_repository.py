@@ -64,7 +64,7 @@ class UserRepository(BaseRepository):
             .join(Action, Course.course_id == Action.course_id)
             .where(
                 Action.user_id == user_id,
-                Action.type == ActionType.LIKE,
+                Action.action_type == ActionType.LIKE.value,
             )
         )
 

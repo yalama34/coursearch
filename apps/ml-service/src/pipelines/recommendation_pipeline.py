@@ -1,19 +1,29 @@
 import logging
+from typing import Any
 
 from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.schemas.recommendations import RecommendationItem
 from src.protocols.recommendation_stage import RecommendationStage
-from src.domain.recommendation.pipeline_order import DEFAULT_RECOMMENDATION_PIPELINE_ORDER
+from src.domain.recommendation.pipeline_order import (
+    DEFAULT_RECOMMENDATION_PIPELINE_ORDER,
+    StageName,
+)
 from src.domain.recommendation.stages_factory import STAGES_FACTORY
 
 
 logger = logging.getLogger(__name__)
 
 class RecommendationPipeline:
-    def __init__(self, session: AsyncSession, stages: list[RecommendationStage] | None = None):
+    def __init__(
+        self,
+        session: AsyncSession,
+        redis: Any | None = None,
+        stages: list[RecommendationStage] | None = None,
+    ):
         self.__db_session: AsyncSession = session
+        self.__redis = redis
         self.stages: list[RecommendationStage] | None = stages if stages is not None else []
 
     async def execute(self, user_id: int, limit: int = 10) -> list[RecommendationItem]:
@@ -62,5 +72,8 @@ class RecommendationPipeline:
 
         for stage in stages_order:
             cur_stage_factory = STAGES_FACTORY[stage]
-            cur_stage = cur_stage_factory(self.__db_session)
+            if stage == StageName.LIKE_RANKER:
+                cur_stage = cur_stage_factory(self.__db_session, self.__redis)
+            else:
+                cur_stage = cur_stage_factory(self.__db_session)
             self._add_stage(cur_stage)

@@ -45,6 +45,19 @@ services:
     networks:
       - recsys_net
 
+  redis:
+    image: redis:7-alpine
+    container_name: recsys_redis
+    restart: always
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+    networks:
+      - recsys_net
+
   ml_service:
     build:
       context: ./apps/ml-service
@@ -70,6 +83,9 @@ services:
       #LLM
       LLM_BASE_URL: ${LLM_BASE_URL}
       LLM_API_KEY: ${LLM_API_KEY}
+      # redis
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
 
     volumes:
       - ./data:/data
@@ -79,6 +95,8 @@ services:
       postgres:
         condition: service_healthy
       chroma:
+        condition: service_healthy
+      redis:
         condition: service_healthy
       migration:
         condition: service_completed_successfully

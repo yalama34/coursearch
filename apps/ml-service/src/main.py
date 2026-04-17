@@ -1,10 +1,12 @@
 import logging
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, BackgroundTasks
 from sqlalchemy import text
 
 from src.common.logging_config import configure_logging
 from src.db.database import get_session, engine
+from src.db.redis import close_redis_client, create_redis_client
 from src.pipelines.load_csv_pipeline import load_csv_pipeline
 from src.pipelines.course_index_pipeline import CourseIndexPipeline
 from src.routers.recommendations import router as recommendations_router
@@ -13,7 +15,15 @@ configure_logging()
 
 logger = logging.getLogger(__name__)
 
-app = FastAPI(title="ML Service")
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    app.state.redis = create_redis_client()
+    yield
+    await close_redis_client(app.state.redis)
+
+
+app = FastAPI(title="ML Service", lifespan=lifespan)
 
 
 # Healthcheck

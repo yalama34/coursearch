@@ -2,6 +2,7 @@ import os
 import pandas as pd
 from datetime import datetime, timedelta
 import logging
+from typing import Any
 
 from catboost import CatBoostRanker
 from sqlalchemy import select, func, distinct
@@ -32,9 +33,19 @@ FEATURE_COLS = [
 ]
 
 
+def _parse_redis_float(value: str | None) -> float:
+    if value is None:
+        return 0.0
+    try:
+        return float(value)
+    except ValueError:
+        return 0.0
+
+
 class LikeRankerStage:
-    def __init__(self, session: AsyncSession):
+    def __init__(self, session: AsyncSession, redis: Any | None = None):
         self.__db_session = session
+        self.__redis = redis
         self.__model_path = os.getenv("SENTENCE_TRANSFORMERS_HOME", "/models") + "/like_ranker/model.cbm"
         self.__model = CatBoostRanker()
         self.__model.load_model(self.__model_path)
@@ -113,17 +124,40 @@ class LikeRankerStage:
             "user_unique_tags_7d": user_unique_tags_7d,
         }
 
-    async def _get_precomputed_pair_features(self, user_id: int, course_id: int) -> dict[str, float]:
+    async def _get_precomputed_features_bulk(
+        self, user_id: int, course_ids: list[int]
+    ) -> dict[int, dict[str, float]]:
         """
-        Retrieves precomputed features for a specific user-course pair
-        :param user_id:
-        :param course_id:
-        :return:
+        Load cosine distance (per user-course pair) and course popularity from Redis.
+        Keys: ``pair:{user_id}:{course_id}:cosine_distance``, ``course:{course_id}:popularity``.
         """
-        return {
-            "cosine_distance": 0.0,
-            "course_popularity_weight": 0.0,
+        default = {"cosine_distance": 0.0, "course_popularity_weight": 0.0}
+        if not self.__redis or not course_ids:
+            return {cid: dict(default) for cid in course_ids}
+
+        unique_courses = list(dict.fromkeys(course_ids))
+        pipe = self.__redis.pipeline()
+        for cid in course_ids:
+            pipe.get(f"pair:{user_id}:{cid}:cosine_distance")
+        for cid in unique_courses:
+            pipe.get(f"course:{cid}:popularity")
+        results = await pipe.execute()
+
+        n_pairs = len(course_ids)
+        cos_raw = results[:n_pairs]
+        pop_raw = results[n_pairs:]
+        pop_by_cid = {
+            cid: _parse_redis_float(pop_raw[i])
+            for i, cid in enumerate(unique_courses)
         }
+
+        out: dict[int, dict[str, float]] = {}
+        for i, cid in enumerate(course_ids):
+            out[cid] = {
+                "cosine_distance": _parse_redis_float(cos_raw[i]),
+                "course_popularity_weight": pop_by_cid.get(cid, 0.0),
+            }
+        return out
 
     async def process(self, user_id: int, candidates: list[RecommendationItem], limit: int = 10) -> list[RecommendationItem]:
         """
@@ -151,6 +185,9 @@ class LikeRankerStage:
         user_window = await self._get_user_features(user_id=user_id)
 
         candidate_ids = [c.item_id for c in candidates]
+        pair_features = await self._get_precomputed_features_bulk(
+            user_id=user_id, course_ids=candidate_ids
+        )
         courses_q = (
             select(Course)
             .where(Course.course_id.in_(candidate_ids))
@@ -173,7 +210,10 @@ class LikeRankerStage:
             jaccard_tags = common_tags / denom
             course_tags_count = float(len(course_tag_set))
 
-            pair_feats = await self._get_precomputed_pair_features(user_id=user_id, course_id=cid)
+            pair_feats = pair_features.get(
+                cid,
+                {"cosine_distance": 0.0, "course_popularity_weight": 0.0},
+            )
 
             row = {
                 "difficulty_match": 0.0,

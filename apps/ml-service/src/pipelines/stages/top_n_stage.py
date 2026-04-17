@@ -1,6 +1,7 @@
 import math
 from datetime import datetime, date
 from typing import List, Dict, Any, Optional
+import logging
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
@@ -9,6 +10,8 @@ from src.db.models import Course, Action
 from src.schemas.recommendations import RecommendationItem, RecommendationExplanation
 from src.domain.recommendation.pipeline_order import StageName
 
+
+logger = logging.getLogger(__name__)
 
 class TopNStage:
     def __init__(self, db_session: AsyncSession = None):
@@ -38,6 +41,8 @@ class TopNStage:
 
         candidate_ids = [c.item_id for c in candidates] if candidates else None
 
+        logger.info(f"[{self.stage_name}] Starting TopNStage for user_id={user_id}. Candidates count: {len(candidates) if candidates else 0}, limit={limit}")
+
         top_data = await self.get_top_n_courses(
             top_n=limit,
             candidate_ids=candidate_ids
@@ -45,6 +50,8 @@ class TopNStage:
 
         course_ids = top_data.get("course_ids", [])
         weights_map = top_data.get("weights_map", {})
+
+        logger.debug(f"[{self.stage_name}] Received {len(course_ids)} top courses from db")
 
         result_candidates = []
 
@@ -62,6 +69,8 @@ class TopNStage:
                 item = RecommendationItem(item_id=cid, explanation=explanation)
                 result_candidates.append(item)
 
+        logger.info(f"[{self.stage_name}] Finished TopNStage for user_id={user_id}. Returned {len(result_candidates)} items.")
+
         return result_candidates
 
     async def get_courses(self) -> List[Dict[str, Any]]:
@@ -75,7 +84,6 @@ class TopNStage:
             query = (
                 select(
                     Course.course_id,
-                    Course.created_at,
                     func.count(
                         Action.action_id
                     ).filter(Action.action_type == 'view').label('views'),
@@ -84,7 +92,7 @@ class TopNStage:
                     ).filter(Action.action_type == 'like').label('likes')
                 )
                 .outerjoin(Action, Course.course_id == Action.course_id)
-                .group_by(Course.course_id, Course.created_at)
+                .group_by(Course.course_id)
                 .order_by(Course.course_id)
             )
 
@@ -97,7 +105,7 @@ class TopNStage:
                     'id': row.course_id,
                     'views': row.views or 0,
                     'likes': row.likes or 0,
-                    'created_at': row.created_at.date() if row.created_at else date.today()
+                    'created_at': date.today()
                 }
                 courses.append(course)
 

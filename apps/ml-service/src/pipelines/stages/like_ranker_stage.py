@@ -1,16 +1,217 @@
+import os
+import pandas as pd
+from datetime import datetime, timedelta
+import logging
+
+from catboost import CatBoostRanker
+from sqlalchemy import select, func, distinct
+from sqlalchemy.orm import selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.domain.recommendation.pipeline_order import StageName
-from src.schemas.recommendations import RecommendationItem
+from src.db.models.association_tables import course_tags
+from src.schemas.recommendations import RecommendationItem, RecommendationExplanation
+from src.db.models import User, Course, Action
+
+logger = logging.getLogger(__name__)
+
+FEATURE_COLS = [
+    "difficulty_match",
+    "common_tags",
+    "jaccard_tags",
+    "course_popularity_weight",
+    "cosine_distance",
+    "course_tags_count",
+    "user_views_30d",
+    "user_likes_7d",
+    "user_unique_tags_7d",
+    "user_unique_courses_7d",
+    "user_views_7d",
+    "user_likes_30d",
+    "user_tags_count",
+]
 
 
 class LikeRankerStage:
     def __init__(self, session: AsyncSession):
         self.__db_session = session
+        self.__model_path = os.getenv("SENTENCE_TRANSFORMERS_HOME", "/models") + "/like_ranker/model.cbm"
+        self.__model = CatBoostRanker()
+        self.__model.load_model(self.__model_path)
 
     @property
     def stage_name(self) -> str:
         return StageName.LIKE_RANKER
 
-    async def process(self, user_id: int, candidates: list[RecommendationItem], limit: int):
-        return candidates
+    async def _get_user_features(self, user_id: int) -> dict[str, float]:
+        """
+        Retrieves user activity features over 7-day and 30-day windows
+        :param user_id:
+        :return:
+        """
+        now_ts = datetime.utcnow()
+        ts_7d = now_ts - timedelta(days=7)
+        ts_30d = now_ts - timedelta(days=30)
+
+        agg_q = (
+            select(
+                func.count().filter(
+                    (Action.action_type == "view")
+                    & (Action.timestamp >= ts_7d)
+                    & (Action.timestamp < now_ts)
+                ).label("user_views_7d"),
+                func.count().filter(
+                    (Action.action_type == "like")
+                    & (Action.timestamp >= ts_7d)
+                    & (Action.timestamp < now_ts)
+                ).label("user_likes_7d"),
+                func.count().filter(
+                    (Action.action_type == "view")
+                    & (Action.timestamp >= ts_30d)
+                    & (Action.timestamp < now_ts)
+                ).label("user_views_30d"),
+                func.count().filter(
+                    (Action.action_type == "like")
+                    & (Action.timestamp >= ts_30d)
+                    & (Action.timestamp < now_ts)
+                ).label("user_likes_30d"),
+            )
+            .where(Action.user_id == user_id)
+        )
+        agg = (await self.__db_session.execute(agg_q)).one()
+
+        uniq_courses_q = (
+            select(func.count(distinct(Action.course_id)))
+            .where(
+                Action.user_id == user_id,
+                Action.action_type == "view",
+                Action.timestamp >= ts_7d,
+                Action.timestamp < now_ts,
+            )
+        )
+        user_unique_courses_7d = float((await self.__db_session.execute(uniq_courses_q)).scalar() or 0)
+
+        uniq_tags_q = (
+            select(func.count(distinct(course_tags.c.tag_id)))
+            .select_from(Action)
+            .join(course_tags, course_tags.c.course_id == Action.course_id)
+            .where(
+                Action.user_id == user_id,
+                Action.action_type == "view",
+                Action.timestamp >= ts_7d,
+                Action.timestamp < now_ts,
+            )
+        )
+        user_unique_tags_7d = float((await self.__db_session.execute(uniq_tags_q)).scalar() or 0)
+
+        return {
+            "user_views_7d": float(agg.user_views_7d or 0),
+            "user_likes_7d": float(agg.user_likes_7d or 0),
+            "user_views_30d": float(agg.user_views_30d or 0),
+            "user_likes_30d": float(agg.user_likes_30d or 0),
+            "user_unique_courses_7d": user_unique_courses_7d,
+            "user_unique_tags_7d": user_unique_tags_7d,
+        }
+
+    async def _get_precomputed_pair_features(self, user_id: int, course_id: int) -> dict[str, float]:
+        """
+        Retrieves precomputed features for a specific user-course pair
+        :param user_id:
+        :param course_id:
+        :return:
+        """
+        return {
+            "cosine_distance": 0.0,
+            "course_popularity_weight": 0.0,
+        }
+
+    async def process(self, user_id: int, candidates: list[RecommendationItem], limit: int = 10) -> list[RecommendationItem]:
+        """
+        Processes and ranks the candidate courses for a given user
+        :param user_id:
+        :param candidates:
+        :param limit:
+        :return:
+        """
+        logger.info(f"[{self.stage_name}] Starting LikeRankerStage for user_id={user_id}. Candidates count: {len(candidates) if candidates else 0}, limit={limit}")
+
+        if not candidates:
+            logger.info(f"[{self.stage_name}] Got no candidates for user_id={user_id}")
+            return candidates
+
+        user_q = select(User).where(User.user_id == user_id).options(selectinload(User.tags))
+        user = (await self.__db_session.execute(user_q)).scalar_one_or_none()
+        if user is None:
+            logger.info(f"[{self.stage_name}] Couldn't find user in db. user_id={user_id}")
+            return candidates
+
+        user_tags = {t.name for t in user.tags}
+        user_tags_count = float(len(user_tags))
+
+        user_window = await self._get_user_features(user_id=user_id)
+
+        candidate_ids = [c.item_id for c in candidates]
+        courses_q = (
+            select(Course)
+            .where(Course.course_id.in_(candidate_ids))
+            .options(selectinload(Course.tags))
+        )
+        courses = (await self.__db_session.execute(courses_q)).scalars().all()
+        course_map = {c.course_id: c for c in courses}
+
+        rows = []
+        ordered_ids = []
+
+        for cid in candidate_ids:
+            course = course_map.get(cid)
+            if not course:
+                continue
+
+            course_tag_set = {t.name for t in course.tags}
+            common_tags = float(len(user_tags & course_tag_set))
+            denom = max(1.0, float(len(user_tags) + len(course_tag_set) - common_tags))
+            jaccard_tags = common_tags / denom
+            course_tags_count = float(len(course_tag_set))
+
+            pair_feats = await self._get_precomputed_pair_features(user_id=user_id, course_id=cid)
+
+            row = {
+                "difficulty_match": 0.0,
+                "common_tags": common_tags,
+                "jaccard_tags": jaccard_tags,
+                "course_popularity_weight": float(pair_feats["course_popularity_weight"]),
+                "cosine_distance": float(pair_feats["cosine_distance"]),
+                "course_tags_count": course_tags_count,
+                "user_views_30d": user_window["user_views_30d"],
+                "user_likes_7d": user_window["user_likes_7d"],
+                "user_unique_tags_7d": user_window["user_unique_tags_7d"],
+                "user_unique_courses_7d": user_window["user_unique_courses_7d"],
+                "user_views_7d": user_window["user_views_7d"],
+                "user_likes_30d": user_window["user_likes_30d"],
+                "user_tags_count": user_tags_count,
+            }
+
+            rows.append(row)
+            ordered_ids.append(cid)
+
+        if not rows:
+            return candidates
+
+        X = pd.DataFrame(rows)[FEATURE_COLS]
+        scores = self.__model.predict(X)
+
+        score_map = {cid: float(score) for cid, score in zip(ordered_ids, scores)}
+        ranked = sorted(candidates, key=lambda c: score_map.get(c.item_id, -1e12), reverse=True)[:limit]
+
+        for item in ranked:
+            score = score_map.get(item.item_id)
+            if item.explanation is None:
+                item.explanation = RecommendationExplanation(
+                    text="Рекомендовано с учетом вероятности лайка",
+                    confidence=score,
+                )
+            else:
+                item.explanation.confidence = score
+
+        logger.info(f"[{self.stage_name}] Finished LikeRankerStage for user_id={user_id}. Returned {len(ranked)} items.")
+        return ranked

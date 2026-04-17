@@ -84,7 +84,6 @@ class TopNStage:
             query = (
                 select(
                     Course.course_id,
-                    Course.created_at,
                     func.count(
                         Action.action_id
                     ).filter(Action.action_type == 'view').label('views'),
@@ -93,7 +92,7 @@ class TopNStage:
                     ).filter(Action.action_type == 'like').label('likes')
                 )
                 .outerjoin(Action, Course.course_id == Action.course_id)
-                .group_by(Course.course_id, Course.created_at)
+                .group_by(Course.course_id)
                 .order_by(Course.course_id)
             )
 
@@ -106,7 +105,7 @@ class TopNStage:
                     'id': row.course_id,
                     'views': row.views or 0,
                     'likes': row.likes or 0,
-                    'created_at': row.created_at.date() if row.created_at else date.today()
+                    'created_at': date.today()
                 }
                 courses.append(course)
 

@@ -36,8 +36,6 @@ class ContentBasedStage:
             candidates: list[RecommendationItem],
             limit: int = 10
     ) -> list[RecommendationItem]:
-        logger.info(
-            f"[{self.stage_name}] Starting ContentBasedStage for user_id={user_id}. Candidates count: {len(candidates) if candidates else 0}, limit={limit}")
         """
         If ``candidates`` is empty finds the needed candidates in all db.
         If ``candidates`` is not empty reranking it by relevancy.
@@ -46,6 +44,8 @@ class ContentBasedStage:
         :param limit:
         :return:
         """
+        logger.info(f"[{self.stage_name}] Starting ContentBasedStage for user_id={user_id}. Candidates count: {len(candidates) if candidates else 0}, limit={limit}")
+
         query = select(User).where(User.user_id == user_id).options(selectinload(User.tags))
         result = await self.__db_session.execute(query)
         user = result.scalar_one_or_none()

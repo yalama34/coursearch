@@ -26,10 +26,10 @@ class RecommendationPipeline:
         candidates: list[RecommendationItem] = []
 
         for stage in self.stages:
-            logger.info(f"Executing stage {stage.name}")
+            logger.info(f"Executing stage {stage.stage_name}")
             stage_response = await stage.process(user_id=user_id, candidates=candidates, limit=limit)
             candidates = stage_response
-            logger.info(f"Got {len(candidates)} candidates for stage {stage.name}")
+            logger.info(f"Got {len(candidates)} candidates for stage {stage.stage_name}")
 
         if len(candidates) == 0:
             logger.info(f"Got no candidates from pipeline")

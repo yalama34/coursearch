@@ -30,7 +30,7 @@ async def get_recommendations(
     service = RecommendationService(ml_client)
 
     try:
-        return await service.get_recommendations(user_id, limit, True)
+        return await service.get_recommendations(user_id, limit)
 
     except Exception:
         raise HTTPException(

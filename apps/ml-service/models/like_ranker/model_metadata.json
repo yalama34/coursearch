@@ -1,0 +1,25 @@
+{
+  "model_type": "CatBoostRanker",
+  "loss_function": "PairLogit",
+  "feature_cols": [
+    "user_tags_count",
+    "course_tags_count",
+    "common_tags",
+    "jaccard_tags",
+    "difficulty_match",
+    "user_views_7d",
+    "user_likes_7d",
+    "user_views_30d",
+    "user_likes_30d",
+    "course_popularity_weight",
+    "user_unique_courses_7d",
+    "user_unique_tags_7d",
+    "cosine_distance"
+  ],
+  "training_date": "2026-04-16T23:59:11.847022",
+  "roc_auc": 0.641480479837777,
+  "pr_auc": 0.23295038508047264,
+  "iterations": 500,
+  "learning_rate": 0.03,
+  "depth": 6
+}

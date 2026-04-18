@@ -26,7 +26,7 @@ class LLMClient:
         try:
             logging.info("[LLM] Generating response")
             response = await self.__client.chat.completions.create(
-                model="qwen/qwen2.5-vl-7b",
+                model="Qwen3.5-122B-A10B",
                 messages=[
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_prompt}

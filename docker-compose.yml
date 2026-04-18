@@ -173,24 +173,24 @@ services:
       - recsys_net
 
 
-  # frontend:
-  #   build:
-  #     dockerfile: ./Dockerfile
-  #     context: ./apps/frontend
+  frontend:
+     build:
+       dockerfile: ./Dockerfile
+       context: ./apps/frontend
 
-  #   container_name: frontend
-  #   restart: always
+     container_name: frontend
+     restart: always
 
-  #   environment:
-  #     - REACT_APP_API_URL=http://core_api:8000
-  #   depends_on:
-  #     - core_api
+     environment:
+       - REACT_APP_API_URL=http://core_api:8000
+     depends_on:
+       - core_api
 
-  #   ports:
-  #     - "${FRONTEND_PORT}:3000"
+     ports:
+       - "${FRONTEND_PORT}:3000"
 
-  #   networks:
-  #     - recsys_net
+     networks:
+       - recsys_net
 
 
 volumes:

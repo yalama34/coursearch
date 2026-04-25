@@ -49,4 +49,4 @@ jobs:
 
       - name: Import check
         run: |
-          python -c "import src.main"
+          PYTHONPATH=apps/core-api python -c "import src.main"

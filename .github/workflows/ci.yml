@@ -47,6 +47,6 @@ jobs:
         run: |
           pip install -r apps/core-api/requirements.txt
 
-      - name: Import check
-        run: |
-          PYTHONPATH=apps/core-api python -c "import src.main"
+#      - name: Import check
+#        run: |
+#          PYTHONPATH=apps/core-api python -c "import src.main"

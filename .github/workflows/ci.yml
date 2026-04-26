@@ -1,0 +1,52 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [ main, develop, 'feature/**' ]
+  push:
+    branches: [ main, develop, 'feature/**' ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    outputs:
+      core: ${{ steps.filter.outputs.core }}
+      ml: ${{ steps.filter.outputs.ml }}
+      frontend: ${{ steps.filter.outputs.frontend }}
+      ml_base: ${{ steps.filter.outputs.ml_base }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # Detect changes
+      - name: Detect changes
+        uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            core:
+              - 'apps/core-api/**'
+
+            ml:
+              - 'apps/ml-service/**'
+              - '!apps/ml-service/requirements.txt'
+
+            ml_base:
+              - 'apps/ml-service/requirements.txt'
+
+            frontend:
+              - 'apps/frontend/**'
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.11
+
+      - name: Install deps
+        run: |
+          pip install -r apps/core-api/requirements.txt
+
+#      - name: Import check
+#        run: |
+#          PYTHONPATH=apps/core-api python -c "import src.main"

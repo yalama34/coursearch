@@ -1,65 +1,9 @@
 services:
 
-  postgres:
-    image: postgres:16.4
-    container_name: recsys_postgres
-    restart: always
-
-    environment:
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-      POSTGRES_DB: ${DB_NAME}
-
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-
-    healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}" ]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-      start_period: 10s
-
-    networks:
-      - recsys_net
-
-  chroma:
-    image: chromadb/chroma:0.6.3
-    container_name: recsys_chroma
-    restart: unless-stopped
-
-    environment:
-      - CHROMA_SERVER_HOST=0.0.0.0
-      - PERSIST_DIRECTORY=/chroma/chroma
-
-    volumes:
-      - chroma_data:/chroma/chroma
-
-    healthcheck:
-      test: [ "CMD", "curl", "-f", "--silent", "--max-time", "5", "http://localhost:8000/api/v1/heartbeat" ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 90s
-
-    networks:
-      - recsys_net
-
-  redis:
-    image: redis:7-alpine
-    container_name: recsys_redis
-    restart: always
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 5s
-      timeout: 3s
-      retries: 5
-      start_period: 5s
-    networks:
-      - recsys_net
-
   ml_service:
-    image: ghcr.io/yalama34/coursearch/recsys-ml-service:latest
+    build:
+      context: ./apps/ml-service
+      dockerfile: ./Dockerfile
 
     container_name: recsys_ml_service
     restart: always
@@ -113,7 +57,10 @@ services:
       - recsys_net
 
   migration:
-    image: ghcr.io/yalama34/coursearch/recsys-core-api:latest
+    image: recsys_backend_image:latest
+    build:
+      context: ./apps/core-api
+      dockerfile: ./Dockerfile
 
     container_name: recsys_migrations
 
@@ -135,7 +82,7 @@ services:
       - recsys_net
 
   core_api:
-    image: ghcr.io/yalama34/coursearch/recsys-core-api:latest
+    image: recsys_backend_image:latest
 
     container_name: recsys_backend
     restart: always
@@ -171,7 +118,9 @@ services:
 
 
   frontend:
-     image: ghcr.io/yalama34/coursearch/recsys-frontend:latest
+     build:
+       dockerfile: ./Dockerfile
+       context: ./apps/frontend
 
      container_name: frontend
      restart: always
@@ -186,13 +135,3 @@ services:
 
      networks:
        - recsys_net
-
-
-volumes:
-  postgres_data:
-  chroma_data:
-  
-
-networks:
-  recsys_net:
-    driver: bridge

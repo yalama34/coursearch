@@ -6,24 +6,31 @@ on:
     types:
       - completed
 
+permissions:
+  contents: read
+  packages: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
 
-    if: ${{ github.event.workflow_run.conclusion == 'success' }} && 
-     github.event.workflow_run.event == 'push'
+    if: |
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'push' &&
+      (github.event.workflow_run.head_branch == 'main' || github.event.workflow_run.head_branch == 'develop')
 
     steps:
       - uses: actions/checkout@v4
         with:
           ref: ${{ github.event.workflow_run.head_sha }}
-          fetch-depth: 0
 
       # Detect changes
       - name: Detect changes
         uses: dorny/paths-filter@v3
         id: filter
         with:
+          base: ${{ github.event.workflow_run.base_ref }}
+          ref: ${{ github.event.workflow_run.head_sha }}
           filters: |
             core:
               - 'apps/core-api/**'
@@ -40,7 +47,7 @@ jobs:
 
       # Login GHCR
       - name: Login GHCR
-        if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push' }}
+        if: github.event.workflow_run.head_branch == 'main' || github.event.workflow_run.head_branch == 'develop'
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
       # Set tags

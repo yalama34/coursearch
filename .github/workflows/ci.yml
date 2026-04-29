@@ -93,9 +93,11 @@ jobs:
             -t ghcr.io/${{ github.repository }}/recsys-ml-base:$TAG \
             ./apps/ml-service
 
-          if [[ "${{ github.event_name }}" == "push" && ("${{ github.ref_name }}" == "main" || "${{ github.ref_name }}" == "develop") ]]; then
-            docker push ghcr.io/${{ github.repository }}/recsys-ml-base:$TAG
-          fi
+#          if [[ "${{ github.event_name }}" == "push" && ("${{ github.ref_name }}" == "main" || "${{ github.ref_name }}" == "develop") ]]; then
+#            docker push ghcr.io/${{ github.repository }}/recsys-ml-base:$TAG
+#          fi
+
+          docker push ghcr.io/${{ github.repository }}/recsys-ml-base:$TAG
 
       # ML SERVICE
       - name: Build ML service

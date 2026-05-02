@@ -82,7 +82,6 @@ jobs:
           echo "SHA_TAG=$SHA_TAG" >> $GITHUB_ENV
 
       - name: Login GHCR
-        if: github.event_name == 'push' && (github.ref_name == 'main' || github.ref_name == 'develop')
         uses: docker/login-action@v4
         with:
           registry: ghcr.io
@@ -98,7 +97,7 @@ jobs:
             ./apps/ml-service
 
       - name: Push ML base
-        if: needs.test.outputs.ml_base == 'true' && github.event_name == 'push' && (github.ref_name == 'main' || github.ref_name == 'develop')
+        if: needs.test.outputs.ml_base == 'true'
         run: docker push ghcr.io/${{ github.repository }}/recsys-ml-base:${{ env.TAG }}
 
       # ML SERVICE

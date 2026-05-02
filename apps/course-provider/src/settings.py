@@ -7,6 +7,9 @@ class Settings(BaseSettings):
     DB_USER: str
     DB_PASSWORD: str
     DB_NAME: str
+    STEPIK_CLIENT_ID: str
+    STEPIK_CLIENT_SECRET: str
+    ENABLED_PROVIDERS: str
 
     class Config:
         env_file = ".env"

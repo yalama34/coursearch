@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class Course(BaseModel):
@@ -8,3 +8,4 @@ class Course(BaseModel):
     difficulty: str | None
     link: str | None
     source: str
+    tags: list[str] = Field(default_factory=list)

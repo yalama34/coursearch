@@ -1,7 +1,7 @@
 from httpx import AsyncClient
 
 
-class StepicClient:
+class StepikClient:
     def __init__(self, client_id: str, client_secret: str):
         self.__base_url = "https://stepik.org"
         self.client = AsyncClient(base_url=self.__base_url)

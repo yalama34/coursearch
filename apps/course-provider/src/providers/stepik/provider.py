@@ -4,8 +4,8 @@ from src.schemas.course import Course
 
 
 class StepikProvider:
-    def __init__(self, client_id: str, client_secret: str):
-        self.client = StepikClient(client_id, client_secret)
+    def __init__(self, client: StepikClient):
+        self.client = client
         self.source_name = "stepik"
 
     async def _fetch_tags(self, tag_ids: set[int]) -> dict[int, str]:
@@ -25,12 +25,16 @@ class StepikProvider:
 
             tag_ids_from_request = set()
             for raw_course in raw_courses:
-                tag_ids_from_request.add(raw_course.get("tags", []))
+                tag_ids_from_request.update(raw_course.get("tags", []))
 
             tags_mapped = await self._fetch_tags(tag_ids_from_request)
 
             for raw_course in raw_courses:
-                course_tags = [tags_mapped[tag_id] for tag_id in raw_course.get("tags", []) if tag_id if tags_mapped]
+                course_tags = [
+                    tags_mapped[tag_id]
+                    for tag_id in raw_course.get("tags") or []
+                    if tag_id in tags_mapped
+                ]
 
                 course_obj = Course(
                     course_id=raw_course.get("id"),

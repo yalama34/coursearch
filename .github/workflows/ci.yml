@@ -60,7 +60,7 @@ jobs:
       - name: Set image tags
         run: |
           BRANCH="${{ github.head_ref || github.ref_name }}"
-          SAFE_BRANCH=$(echo "$BRANCH" | sed 's/\//-/g')
+          SAFE_BRANCH=$(echo "$BRANCH" | tr '[:upper:]' '[:lower:]' | sed 's#[^a-z0-9._-]#-#g')
 
           if [ "$BRANCH" = "main" ]; then
             TAG=latest
@@ -78,7 +78,7 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       - name: Login GHCR
-#        if: github.event_name == 'push' && (github.ref_name == 'main' || github.ref_name == 'develop')
+        if: github.event_name == 'push' && (github.ref_name == 'main' || github.ref_name == 'develop')
         uses: docker/login-action@v4
         with:
           registry: ghcr.io
@@ -87,44 +87,25 @@ jobs:
 
       # ML BASE
       - name: Build ML base
-        if: needs.test.outputs.ml_base == 'true'
+        if: needs.test.outputs.ml_base == 'true' || github.event_name == 'pull_request'
         uses: docker/build-push-action@v5
         with:
           context: ./apps/ml-service
           file: apps/ml-service/Dockerfile.base
-#          push: ${{ github.event_name == 'push' && (github.ref_name == 'main' || github.ref_name == 'develop') }}
+          push: ${{ github.event_name == 'push' && (github.ref_name == 'main' || github.ref_name == 'develop') }}
+          load: ${{ github.event_name == 'pull_request' }}
           tags: ghcr.io/${{ github.repository }}/recsys-ml-base:${{ env.TAG }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
-
-      - name: Wait for ML base image
-#        if: needs.test.outputs.ml_base == 'true'
-        run: |
-          IMAGE="ghcr.io/${{ github.repository }}/recsys-ml-base:${{ env.TAG }}"
-      
-          for i in {1..10}; do
-            echo "Attempt $i: pulling $IMAGE"
-            
-            if docker pull $IMAGE; then
-              echo "Image is available!"
-              exit 0
-            fi
-      
-            echo "Not ready yet, retrying in 3s..."
-            sleep 3
-          done
-      
-          echo "Failed to pull image after retries"
-          exit 1
 
       # ML SERVICE
       - name: Build ML service
         if: needs.test.outputs.ml == 'true' || needs.test.outputs.ml_base == 'true'
         uses: docker/build-push-action@v5
         with:
-          build-args: |
-            BASE_TAG=${{ github.event_name == 'pull_request' && 'develop' || env.TAG }}
           context: ./apps/ml-service
+          build-args: |
+            BASE_TAG=${{ env.TAG }}
           push: ${{ github.event_name == 'push' && (github.ref_name == 'main' || github.ref_name == 'develop') }}
           tags: |
             ghcr.io/${{ github.repository }}/recsys-ml-service:${{ env.TAG }}

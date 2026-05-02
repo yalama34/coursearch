@@ -91,7 +91,7 @@ jobs:
 
       # ML BASE
       - name: Build ML base
-#        if: needs.test.outputs.ml_base == 'true'
+        if: needs.test.outputs.ml_base == 'true'
         run: |
           docker build -f apps/ml-service/Dockerfile.base \
             -t ghcr.io/${{ github.repository }}/recsys-ml-base:${{ env.TAG }} \

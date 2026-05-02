@@ -94,51 +94,51 @@ jobs:
 #        if: needs.test.outputs.ml_base == 'true'
         run: |
           docker build -f apps/ml-service/Dockerfile.base \
-            -t ghcr.io/${{ github.repository }}/recsys-ml-base:$TAG \
+            -t ghcr.io/${{ github.repository }}/recsys-ml-base:${{ env.TAG }} \
             ./apps/ml-service
 
       - name: Push ML base
-#        if: needs.test.outputs.ml_base == 'true' && github.event_name == 'push' && (github.ref_name == 'main' || github.ref_name == 'develop')
-        run: docker push ghcr.io/${{ github.repository }}/recsys-ml-base:$TAG
+        if: needs.test.outputs.ml_base == 'true' && github.event_name == 'push' && (github.ref_name == 'main' || github.ref_name == 'develop')
+        run: docker push ghcr.io/${{ github.repository }}/recsys-ml-base:${{ env.TAG }}
 
       # ML SERVICE
       - name: Build ML service
         if: needs.test.outputs.ml == 'true' || needs.test.outputs.ml_base == 'true'
         run: |
-          docker build -t ghcr.io/${{ github.repository }}/recsys-ml-service:$TAG \
-            -t ghcr.io/${{ github.repository }}/recsys-ml-service:$SHA_TAG \
+          docker build -t ghcr.io/${{ github.repository }}/recsys-ml-service:${{ env.TAG }} \
+            -t ghcr.io/${{ github.repository }}/recsys-ml-service:${{ env.SHA_TAG }} \
             ./apps/ml-service
 
       - name: Push ML service
         if: (needs.test.outputs.ml == 'true' || needs.test.outputs.ml_base == 'true') && github.event_name == 'push' && (github.ref_name == 'main' || github.ref_name == 'develop')
         run: |
-          docker push ghcr.io/${{ github.repository }}/recsys-ml-service:$TAG
-          docker push ghcr.io/${{ github.repository }}/recsys-ml-service:$SHA_TAG
+          docker push ghcr.io/${{ github.repository }}/recsys-ml-service:${{ env.TAG }}
+          docker push ghcr.io/${{ github.repository }}/recsys-ml-service:${{ env.SHA_TAG }}
 
       # CORE API
       - name: Build core-api
         if: needs.test.outputs.core == 'true'
         run: |
-          docker build -t ghcr.io/${{ github.repository }}/recsys-core-api:$TAG \
-            -t ghcr.io/${{ github.repository }}/recsys-core-api:$SHA_TAG \
+          docker build -t ghcr.io/${{ github.repository }}/recsys-core-api:${{ env.TAG }} \
+            -t ghcr.io/${{ github.repository }}/recsys-core-api:${{ env.SHA_TAG }} \
             ./apps/core-api
 
       - name: Push core-api
         if: needs.test.outputs.core == 'true' && github.event_name == 'push' && (github.ref_name == 'main' || github.ref_name == 'develop')
         run: |
-          docker push ghcr.io/${{ github.repository }}/recsys-core-api:$TAG
-          docker push ghcr.io/${{ github.repository }}/recsys-core-api:$SHA_TAG
+          docker push ghcr.io/${{ github.repository }}/recsys-core-api:${{ env.TAG }}
+          docker push ghcr.io/${{ github.repository }}/recsys-core-api:${{ env.SHA_TAG }}
 
       # FRONTEND
       - name: Build frontend
         if: needs.test.outputs.frontend == 'true'
         run: |
-          docker build -t ghcr.io/${{ github.repository }}/recsys-frontend:$TAG \
-            -t ghcr.io/${{ github.repository }}/recsys-frontend:$SHA_TAG \
+          docker build -t ghcr.io/${{ github.repository }}/recsys-frontend:${{ env.TAG }} \
+            -t ghcr.io/${{ github.repository }}/recsys-frontend:${{ env.SHA_TAG }} \
             ./apps/frontend
 
       - name: Push frontend
         if: needs.test.outputs.frontend == 'true' && github.event_name == 'push' && (github.ref_name == 'main' || github.ref_name == 'develop')
         run: |
-          docker push ghcr.io/${{ github.repository }}/recsys-frontend:$TAG
-          docker push ghcr.io/${{ github.repository }}/recsys-frontend:$SHA_TAG
+          docker push ghcr.io/${{ github.repository }}/recsys-frontend:${{ env.TAG }}
+          docker push ghcr.io/${{ github.repository }}/recsys-frontend:${{ env.SHA_TAG }}

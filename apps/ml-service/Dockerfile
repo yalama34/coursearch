@@ -1,20 +1,6 @@
-FROM python:3.12-slim
+FROM ghcr.io/yalama34/coursearch/recsys-ml-base:latest
 
 WORKDIR /app
-
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    gcc \
-    g++ \
-    libgomp1 \
-    curl \
-    && rm -rf /var/lib/apt/lists/*
-
-RUN pip install --no-cache-dir --upgrade pip
-
-COPY requirements.txt .
-
-RUN --mount=type=cache,target=/root/.cache/pip \
-    pip install --no-cache-dir --prefer-binary -r requirements.txt -i https://mirrors.aliyun.com/pypi/simple/
 
 COPY . .
 

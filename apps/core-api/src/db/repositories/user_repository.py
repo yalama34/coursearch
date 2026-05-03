@@ -13,16 +13,9 @@ from src.db.models import (
 
 
 class UserRepository(BaseRepository):
-    """
-    Repository to make selects from user table
-    """
-    async def get_user(
-            self,
-            user_id: int
-    ) -> User | None:
-        """
-        Get all user info by user ID
-        """
+    """Repository to make selects from user table"""
+    async def get_user(self, user_id: int) -> User | None:
+        """Get all user info by user ID"""
         stmt = (
             select(User)
             .where(User.user_id == user_id)
@@ -31,14 +24,59 @@ class UserRepository(BaseRepository):
 
         return result.scalar_one_or_none()
 
+    async def get_by_nickname(self, nickname: str) -> User | None:
+        """Get all user info by nickname"""
+        stmt = (
+            select(User)
+            .where(User.nickname == nickname)
+        )
+        result = await self.session.execute(stmt)
+
+        return result.scalar_one_or_none()
+
+    async def get_by_jwt_token(self, token: str) -> User | None:
+        """Get all user info by jwt token"""
+        stmt = (
+            select(User)
+            .where(User.jwt_token == token)
+        )
+        result = await self.session.execute(stmt)
+
+        return result.scalar_one_or_none()
+
+    async def create_user(
+        self,
+        nickname: str,
+        password_hash: str,
+        jwt_token: str,
+    ) -> User:
+        """Create new user by password hash and jwt token"""
+        user = User(
+            nickname=nickname,
+            password=password_hash,
+            jwt_token=jwt_token,
+        )
+        self.session.add(user)
+        await self.session.flush()
+        await self.session.refresh(user)
+        return user
+
+    async def set_jwt_token(
+            self,
+            user_id: int,
+            jwt_token: str | None,
+    ) -> None:
+        """Set new jwt token"""
+        user = await self.get_user(user_id)
+        if user:
+            user.jwt_token = jwt_token
+            await self.session.flush()
 
     async def get_user_tags(
             self,
             user_id: int
     ) -> list[str]:
-        """
-        Get all user tags by user ID
-        """
+        """Get all user tags by user ID"""
         stmt = (
             select(Tag.name)
             .join(user_tags, Tag.tag_id == user_tags.c.tag_id)
@@ -53,9 +91,7 @@ class UserRepository(BaseRepository):
             self,
             user_id: int
     ) -> list[CourseShort]:
-        """
-        Get all user liked courses by user ID
-        """
+        """Get all user liked courses by user ID"""
         stmt = (
             select(
                 Course.course_id,

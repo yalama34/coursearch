@@ -46,7 +46,7 @@ class LikeRankerStage:
     def __init__(self, session: AsyncSession, redis: Any | None = None):
         self.__db_session = session
         self.__redis = redis
-        self.__model_path = os.getenv("SENTENCE_TRANSFORMERS_HOME", "/models") + "/like_ranker/model.cbm"
+        self.__model_path = os.getenv("SENTENCE_TRANSFORMERS_HOME", "/models") + "/like_ranker_v1/model.cbm"
         self.__model = CatBoostRanker()
         self.__model.load_model(self.__model_path)
 

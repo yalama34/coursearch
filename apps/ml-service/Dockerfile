@@ -1,4 +1,6 @@
-FROM ghcr.io/yalama34/coursearch/recsys-ml-base:latest
+ARG BASE_TAG=develop
+
+FROM ghcr.io/yalama34/coursearch/recsys-ml-base:${BASE_TAG}
 
 WORKDIR /app
 

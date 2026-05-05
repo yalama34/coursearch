@@ -1,12 +1,6 @@
-models/
-data/
-
 *.pt
 *.bin
 *.safetensors
-__pycache__/
-
-tests/
 
 Dockerfile
 Dockerfile.base

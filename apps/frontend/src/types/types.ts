@@ -33,3 +33,19 @@ export interface ProfileData {
 export interface RecommendationsData {
     recommendations: Course[];
 }
+
+export interface AuthPayload {
+    nickname: string;
+    password: string;
+}
+
+export interface AuthResponse {
+    token: string;
+    user_id: number;
+    nickname: string;
+}
+
+export interface MeResponse {
+    user_id: number;
+    nickname: string;
+}

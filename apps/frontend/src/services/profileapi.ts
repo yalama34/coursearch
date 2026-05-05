@@ -3,7 +3,6 @@ import { ProfileData, RecommendationsData } from '../types/types';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
-// Safe mapper for Python snake_case → JS camelCase
 const mapProfile = (data: any): ProfileData => ({
     userId: (data.user_id ?? data.userId ?? '').toString(),
     name: data.name || 'User',

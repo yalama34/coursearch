@@ -1,11 +1,8 @@
-// src/features/profile/hooks/useProfile.ts
-
 import { useState, useEffect, useCallback } from 'react';
 import { getProfile, getRecommendations } from '../services/profileapi';
 import { mockProfile, mockRecommendations } from '../mock/mockData';
 import { ProfileData, Course } from '../types/types';
 
-// Read from environment variable
 const USE_MOCK = import.meta.env.VITE_USE_MOCK === 'true';
 
 interface UseProfileResult {
@@ -30,7 +27,6 @@ export const useProfile = (userId: string | number): UseProfileResult => {
             if (USE_MOCK) {
                 await new Promise(resolve => setTimeout(resolve, 800));
 
-                // Use mock data
                 setProfile(mockProfile);
                 setRecommendations(mockRecommendations.recommendations);
             } else {

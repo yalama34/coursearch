@@ -2,7 +2,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.providers.registry import PROVIDER_BUILDERS
 from src.providers.stepik.provider import StepikProvider
-from src.providers.base import CourseProvider
+from src.providers.contract import CourseProvider
 from src.db.repositories.course_repository import CourseRepository
 from src.db.database import async_session_maker
 from src.settings import settings

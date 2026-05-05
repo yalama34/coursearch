@@ -1,7 +1,7 @@
 from typing import Protocol, runtime_checkable
 
-
 from src.schemas.course import Course
+
 
 @runtime_checkable
 class CourseProvider(Protocol):

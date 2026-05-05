@@ -1,4 +1,3 @@
-from src.providers.base import CourseProvider
 from src.providers.stepik.client import StepikClient
 from src.schemas.course import Course
 

@@ -1,4 +1,5 @@
 import { ProfileData, RecommendationResponse } from '../types/types';
+import LogoImage from '../components/assets/coursearch_logo.png';
 
 export const mockProfile: ProfileData = {
     userId: '12345',
@@ -143,5 +144,18 @@ export const mockRecommendations: RecommendationResponse = {
                 { id: '17', label: 'Architecture' },
             ],
         },*/
+    ],
+};
+
+export const mockCourseDetails = {
+    id: '1',
+    title: 'Coursearch',
+    description: 'ээээ типа проект бро',
+    author: 'Прудников Ярик(любит сокращения)',
+    imageUrl: LogoImage,
+    tags: [
+        { id: '1', label: 'TypeScript' },
+        { id: '2', label: 'rEACT' },
+        { id: '3', label: 'Python' },
     ],
 };

@@ -1,23 +1,27 @@
 import React from 'react';
+import {Link} from 'react-router-dom';
 import { useProfile } from '../../hooks/profilehook';
 import { Course } from '../../types/types';
 import './ProfilePage.css';
 
 const MiniCourseCard: React.FC<{ course: Course }> = ({ course }) => (
-    <div className="course-card">
-        <div className="course-image-placeholder">
-            <div className="image-icon"></div>
-        </div>
-        <div className="course-content">
-            <h3 className="course-title">{course.title}</h3>
-            <p className="course-description">{course.description}</p>
-            <div className="course-tags">
-                {course.tags.map((tag) => (
-                    <span key={tag.id} className="tag">{tag.label}</span>
-                ))}
+    <Link to={`/course/${course.id}`} className="course-card-link">
+        <div className="course-card">
+            <div className="course-image-placeholder">
+                <div className="image-icon"></div>
+            </div>
+
+            <div className="course-content">
+                <h3 className="course-title">{course.title}</h3>
+                <p className="course-description">{course.description}</p>
+                <div className="course-tags">
+                    {course.tags.map((tag) => (
+                        <span key={tag.id} className="tag">{tag.label}</span>
+                    ))}
+                </div>
             </div>
         </div>
-    </div>
+    </Link>
 );
 
 interface ProfilePageProps {
@@ -33,7 +37,6 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ userId = '12345' }) =>
 
     return (
         <div className="profile-page">
-            {/* Header */}
             <div className="profile-header">
                 <div className="profile-avatar-large">
                     <svg className="avatar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -49,7 +52,6 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ userId = '12345' }) =>
                 </div>
             </div>
 
-            {/* Interests */}
             <div className="interests-section">
                 <h3 className="section-title">My Interests</h3>
                 <div className="interests-container">

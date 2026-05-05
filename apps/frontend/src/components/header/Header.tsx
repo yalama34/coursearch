@@ -20,12 +20,11 @@ export const Header: React.FC<HeaderProps> = ({ activeTab, onTabChange, onSearch
     return (
         <header className="header">
             <div className="header-left">
-                {/* UPDATED: Logo Image Section */}
                 <div className="logo" onClick={() => onTabChange('recommendations')}>
                     <img
                         src={LogoImage}
                         alt="CourseArch Logo"
-                        className="logo-img"
+                        className="logo-img-header"
                     />
                 </div>
         <nav className="nav-buttons">
@@ -57,7 +56,6 @@ export const Header: React.FC<HeaderProps> = ({ activeTab, onTabChange, onSearch
     <span className="search-icon"></span>
     </div>
     <div className="user-avatar" onClick={() => onTabChange('profile')}>
-    {/* Avatar placeholder */}
     </div>
     </div>
     </header>

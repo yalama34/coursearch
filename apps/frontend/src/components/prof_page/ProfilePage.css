@@ -141,6 +141,21 @@
     transition: background-color 0.2s;
 }
 
+.course-card-link {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+    height: 100%;
+    width: 100%;
+    border-radius: 12px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.course-card-link:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.4);
+}
+
 .add-interest-btn:hover {
     background-color: #a078d8;
 }

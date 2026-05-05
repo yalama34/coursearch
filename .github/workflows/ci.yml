@@ -19,6 +19,7 @@ jobs:
       ml: ${{ steps.filter.outputs.ml }}
       frontend: ${{ steps.filter.outputs.frontend }}
       ml_base: ${{ steps.filter.outputs.ml_base }}
+      provider: ${{ steps.filter.outputs.provider }}
 
     steps:
       - uses: actions/checkout@v4
@@ -40,6 +41,9 @@ jobs:
 
             frontend:
               - 'apps/frontend/**'
+            
+            provider:
+              - 'apps/course-provider/**'
 
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -64,14 +68,16 @@ jobs:
 
           if [ "$BRANCH" = "main" ]; then
             TAG=latest
-          elif [ "$BRANCH" = "develop" ]; then
-            TAG=develop
+            BASE_TAG=latest
           else
-            TAG="$SAFE_BRANCH"
+            TAG=develop
+            BASE_TAG=develop
           fi
 
-          SHA_TAG="${TAG}-${{ github.sha }}"
+          SHA_TAG="${SAFE_BRANCH}-${{ github.sha }}"
+
           echo "TAG=$TAG" >> $GITHUB_ENV
+          echo "BASE_TAG=$BASE_TAG" >> $GITHUB_ENV
           echo "SHA_TAG=$SHA_TAG" >> $GITHUB_ENV
 
       - name: Set up Docker Buildx
@@ -87,14 +93,13 @@ jobs:
 
       # ML BASE
       - name: Build ML base
-        if: needs.test.outputs.ml_base == 'true' || github.event_name == 'pull_request'
+        if: needs.test.outputs.ml_base == 'true'
         uses: docker/build-push-action@v5
         with:
           context: ./apps/ml-service
           file: apps/ml-service/Dockerfile.base
           push: ${{ github.event_name == 'push' && (github.ref_name == 'main' || github.ref_name == 'develop') }}
-          load: ${{ github.event_name == 'pull_request' }}
-          tags: ghcr.io/${{ github.repository }}/recsys-ml-base:${{ env.TAG }}
+          tags: ghcr.io/${{ github.repository }}/recsys-ml-base:${{ env.BASE_TAG }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -105,7 +110,7 @@ jobs:
         with:
           context: ./apps/ml-service
           build-args: |
-            BASE_TAG=${{ env.TAG }}
+            BASE_TAG=${{ env.BASE_TAG }}
           push: ${{ github.event_name == 'push' && (github.ref_name == 'main' || github.ref_name == 'develop') }}
           tags: |
             ghcr.io/${{ github.repository }}/recsys-ml-service:${{ env.TAG }}
@@ -136,5 +141,18 @@ jobs:
           tags: |
             ghcr.io/${{ github.repository }}/recsys-frontend:${{ env.TAG }}
             ghcr.io/${{ github.repository }}/recsys-frontend:${{ env.SHA_TAG }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # COURSE PROVIDER
+      - name: Build course provider
+        if: needs.test.outputs.provider == 'true'
+        uses: docker/build-push-action@v5
+        with:
+          context: ./apps/course-provider
+          push: ${{ github.event_name == 'push' && (github.ref_name == 'main' || github.ref_name == 'develop') }}
+          tags: |
+            ghcr.io/${{ github.repository }}/recsys-course-provider:${{ env.TAG }}
+            ghcr.io/${{ github.repository }}/recsys-course-provider:${{ env.SHA_TAG }}
           cache-from: type=gha
           cache-to: type=gha,mode=max

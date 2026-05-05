@@ -59,7 +59,7 @@ services:
       - recsys_net
 
   ml_service:
-    image: ghcr.io/yalama34/coursearch/recsys-ml-service:latest
+    image: ghcr.io/yalama34/coursearch/recsys-ml-service:${IMAGE_TAG:-latest}
 
     container_name: recsys_ml_service
     restart: always
@@ -113,7 +113,7 @@ services:
       - recsys_net
 
   migration:
-    image: ghcr.io/yalama34/coursearch/recsys-core-api:latest
+    image: ghcr.io/yalama34/coursearch/recsys-core-api:${IMAGE_TAG:-latest}
 
     container_name: recsys_migrations
 
@@ -135,7 +135,7 @@ services:
       - recsys_net
 
   core_api:
-    image: ghcr.io/yalama34/coursearch/recsys-core-api:latest
+    image: ghcr.io/yalama34/coursearch/recsys-core-api:${IMAGE_TAG:-latest}
 
     container_name: recsys_backend
     restart: always
@@ -171,7 +171,7 @@ services:
 
 
   frontend:
-     image: ghcr.io/yalama34/coursearch/recsys-frontend:latest
+     image: ghcr.io/yalama34/coursearch/recsys-frontend:${IMAGE_TAG:-latest}
 
      container_name: frontend
      restart: always
@@ -188,9 +188,8 @@ services:
        - recsys_net
 
   course_provider:
-    build:
-      context: ./apps/course-provider
-      dockerfile: ./Dockerfile
+    image: ghcr.io/yalama34/coursearch/recsys-course-provider:${IMAGE_TAG:-latest}
+
     container_name: recsys_course_provider
     restart: always
 

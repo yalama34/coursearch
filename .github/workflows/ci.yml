@@ -50,8 +50,37 @@ jobs:
         with:
           python-version: 3.11
 
-      - name: Install deps
-        run: pip install -r apps/core-api/requirements.txt
+      # ML Service tests
+      - name: Install ML deps
+        if: steps.filter.outputs.ml == 'true' || steps.filter.outputs.ml_base == 'true'
+        run: |
+          pip install -r apps/ml-service/requirements.txt
+          pip install pytest pytest-asyncio pytest-mock
+
+      - name: Run ML tests
+        if: steps.filter.outputs.ml == 'true' || steps.filter.outputs.ml_base == 'true'
+        run: |
+          cd apps/ml-service
+          pytest -v
+
+      # Frontend tests
+      - name: Setup Node
+        if: steps.filter.outputs.frontend == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Install frontend deps
+        if: steps.filter.outputs.frontend == 'true'
+        run: |
+          cd apps/frontend
+          npm ci
+
+      - name: Run frontend tests
+        if: steps.filter.outputs.frontend == 'true'
+        run: |
+          cd apps/frontend
+          npm test -- --watchAll=false
 
   build:
     runs-on: ubuntu-latest

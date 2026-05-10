@@ -8,7 +8,7 @@ class MLServiceClient:
     def __init__(self, base_url: str = "http://ml-service:8001"):
         self.client = httpx.AsyncClient(
             base_url=base_url,
-            timeout=httpx.Timeout(timeout=5.0, connect=2.0),
+            timeout=httpx.Timeout(timeout=120.0, connect=5.0),
         )
 
     async def _request_with_retry(

@@ -5,5 +5,9 @@ from src.schemas.course import CourseShort
 
 class ProfileResponse(BaseModel):
     user_id: int
+    nickname: str
     tags: list[str]
     liked_courses: list[CourseShort]
+
+class UpdateTagsRequest(BaseModel):
+    tags: list[str]

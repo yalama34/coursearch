@@ -12,6 +12,8 @@ from src.db.models import (
 )
 
 
+from sqlalchemy.orm import selectinload
+
 class UserRepository(BaseRepository):
     """Repository to make selects from user table"""
     async def get_user(self, user_id: int) -> User | None:
@@ -19,6 +21,7 @@ class UserRepository(BaseRepository):
         stmt = (
             select(User)
             .where(User.user_id == user_id)
+            .options(selectinload(User.tags))
         )
         result = await self.session.execute(stmt)
 
@@ -85,6 +88,31 @@ class UserRepository(BaseRepository):
         result = await self.session.execute(stmt)
 
         return [row[0] for row in result.all()]
+
+    async def set_user_tags(self, user_id: int, tag_names: list[str]) -> None:
+        """Set user tags by names"""
+        user = await self.get_user(user_id)
+        if not user:
+            return
+
+        if not tag_names:
+            user.tags = []
+        else:
+            stmt = select(Tag).where(Tag.name.in_(tag_names))
+            result = await self.session.execute(stmt)
+            existing_tags = list(result.scalars().all())
+            existing_names = {t.name for t in existing_tags}
+            
+            # Create missing tags
+            for name in tag_names:
+                if name not in existing_names:
+                    new_tag = Tag(name=name)
+                    self.session.add(new_tag)
+                    existing_tags.append(new_tag)
+                    
+            user.tags = existing_tags
+
+        await self.session.flush()
 
 
     async def get_user_liked_courses(

@@ -29,6 +29,18 @@ class ProfileService:
 
         return ProfileResponse(
             user_id=user.user_id,
+            nickname=user.nickname,
             tags=tags,
             liked_courses=courses,
         )
+
+    async def update_tags(
+            self,
+            user_id: int,
+            tags: list[str]
+    ) -> None:
+        """
+        Update user tags
+        """
+        await self.repository.set_user_tags(user_id, tags)
+        await self.session.commit()

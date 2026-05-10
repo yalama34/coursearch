@@ -11,6 +11,7 @@ from src.routers.profile import router as profile_router
 from src.routers.health import router as health_router
 from src.routers.recommendation import router as recommendation_router
 from src.routers.auth import router as auth_router
+from src.routers.course import router as course_router
 
 
 @asynccontextmanager
@@ -54,3 +55,4 @@ app.include_router(auth_router)
 app.include_router(profile_router)
 app.include_router(health_router)
 app.include_router(recommendation_router)
+app.include_router(course_router)

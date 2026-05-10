@@ -1,11 +1,29 @@
 from fastapi import APIRouter, HTTPException
 
 from src.dependencies.db import SessionDep
+from src.dependencies.auth import CurrentUserDep
 from src.services.profile import ProfileService
-from src.schemas.profile import ProfileResponse
+from src.schemas.profile import ProfileResponse, UpdateTagsRequest
 
 
 router = APIRouter(tags=["profile"], prefix="/profile")
+
+
+@router.post(
+        "/tags",
+        summary="Update user tags",
+)
+async def update_user_tags(
+        request: UpdateTagsRequest,
+        current_user: CurrentUserDep,
+        session: SessionDep,
+) -> dict[str, str]:
+    """
+    Update tags (interests) for the current user.
+    """
+    profile_service = ProfileService(session)
+    await profile_service.update_tags(current_user.user_id, request.tags)
+    return {"status": "ok"}
 
 
 @router.get(

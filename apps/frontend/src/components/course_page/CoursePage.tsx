@@ -1,11 +1,10 @@
 import React from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { useCourse } from '../../hooks/coursehook';
 import './CoursePage.css';
 
 export const CoursePage: React.FC = () => {
     const { id } = useParams<{ id: string }>();
-    const navigate = useNavigate();
     const { course, isLoading, error } = useCourse(id);
 
     if (isLoading) return <div className="course-page">Loading...</div>;

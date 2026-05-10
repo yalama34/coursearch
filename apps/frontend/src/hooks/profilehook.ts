@@ -20,6 +20,10 @@ export const useProfile = (userId: string | number): UseProfileResult => {
     const [error, setError] = useState<string | null>(null);
 
     const fetchData = useCallback(async () => {
+        if (!userId) {
+            setIsLoading(false);
+            return;
+        }
         setIsLoading(true);
         setError(null);
 

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
+import { updateInterests } from '../../services/profileapi';
 import './interests_page.css';
 
 const AVAILABLE_TAGS = [
@@ -17,9 +18,10 @@ const AVAILABLE_TAGS = [
 
 export const InterestSelectionPage: React.FC = () => {
     const navigate = useNavigate();
-    const { user, logout } = useAuth();
+    const location = useLocation();
+    const { user, token, logout } = useAuth();
 
-    const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set(['1', '2', '7'])); // Pre-selected for demo
+    const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set([])); 
     const [isSaving, setIsSaving] = useState(false);
 
     const toggleTag = (id: string) => {
@@ -35,12 +37,20 @@ export const InterestSelectionPage: React.FC = () => {
     const handleFinish = async () => {
         setIsSaving(true);
         try {
-            // TODO: Call API
-            await new Promise(resolve => setTimeout(resolve, 500)); // Mock delay
-            alert('Интересы сохранены');
-            navigate('/profile');
+            const selectedTags = Array.from(selectedIds)
+                .map(id => AVAILABLE_TAGS.find(t => t.id === id)?.label)
+                .filter(Boolean) as string[];
+            if (token) {
+                await updateInterests(selectedTags, token);
+            }
+            if (location.state?.fromRegistration) {
+                navigate('/', { replace: true });
+            } else {
+                navigate('/profile');
+            }
         } catch (error) {
             console.error('Failed to save interests', error);
+            alert('Не удалось сохранить интересы');
         } finally {
             setIsSaving(false);
         }

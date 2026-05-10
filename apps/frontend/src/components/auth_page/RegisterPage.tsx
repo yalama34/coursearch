@@ -17,7 +17,7 @@ export const RegisterPage: React.FC = () => {
             return;
         }
         const success = await register(nickname, password);
-        if (success) navigate('/');
+        if (success) navigate('/setup-interests', { state: { fromRegistration: true }, replace: true });
     };
 
     return (

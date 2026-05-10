@@ -8,10 +8,8 @@ import { WelcomePage } from './components/auth_page/WelcomePage';
 import { LoginPage } from './components/auth_page/LoginPage';
 import { RegisterPage } from './components/auth_page/RegisterPage';
 import { InterestSelectionPage } from './components/interests/interests_page';
+import { useAuth } from './hooks/useAuth';
 import './App.css';
-
-// const isAuthenticated = localStorage.getItem('authToken') !== null;
-const isAuthenticated = 1;
 
 const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const location = useLocation();
@@ -39,6 +37,12 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 };
 
 const App: React.FC = () => {
+    const { user, isAuthenticated, isLoading } = useAuth();
+
+    if (isLoading) {
+        return <div className="loading-state">Загрузка...</div>;
+    }
+
     return (
         <BrowserRouter>
             <Routes>
@@ -49,52 +53,36 @@ const App: React.FC = () => {
                 <Route
                     path="/"
                     element={
-                        isAuthenticated ? (
-                            <Layout>
-                                <RecommendationsPage />
-                            </Layout>
-                        ) : (
-                            <Navigate to="/welcome" />
-                        )
+                        <Layout>
+                            <RecommendationsPage userId={user?.user_id?.toString()} />
+                        </Layout>
                     }
                 />
 
                 <Route
                     path="/profile"
                     element={
-                        isAuthenticated ? (
-                            <Layout>
-                                <ProfilePage />
-                            </Layout>
-                        ) : (
-                            <Navigate to="/welcome" />
-                        )
+                        <Layout>
+                            <ProfilePage userId={user?.user_id?.toString()} />
+                        </Layout>
                     }
                 />
 
                 <Route
                     path="/course/:id"
                     element={
-                        isAuthenticated ? (
-                            <Layout>
-                                <CoursePage />
-                            </Layout>
-                        ) : (
-                            <Navigate to="/welcome" />
-                        )
+                        <Layout>
+                            <CoursePage />
+                        </Layout>
                     }
                 />
 
                 <Route
                     path="/setup-interests"
                     element={
-                        isAuthenticated ? (
-                            <Layout>
-                                <InterestSelectionPage />
-                            </Layout>
-                        ) : (
-                            <Navigate to="/welcome" />
-                        )
+                        <Layout>
+                            <InterestSelectionPage />
+                        </Layout>
                     }
                 />
             </Routes>

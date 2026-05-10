@@ -108,7 +108,7 @@ describe('authApi', () => {
                 expect.stringContaining('/me'),
                 expect.objectContaining({
                     headers: expect.objectContaining({
-                        'Authorization': 'Bearer token-123',
+                        'X-Session-Token': 'token-123',
                     }),
                 })
             )

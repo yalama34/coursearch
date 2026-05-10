@@ -4,7 +4,7 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
 export const authApi = {
     register: async (body: AuthPayload): Promise<AuthResponse> => {
-        const res = await fetch(`${API_BASE_URL}/register`, {
+        const res = await fetch(`${API_BASE_URL}/auth/register`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(body),
@@ -18,7 +18,7 @@ export const authApi = {
     },
 
     login: async (body: AuthPayload): Promise<AuthResponse> => {
-        const res = await fetch(`${API_BASE_URL}/login`, {
+        const res = await fetch(`${API_BASE_URL}/auth/login`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(body),
@@ -32,11 +32,11 @@ export const authApi = {
     },
 
     logout: async (token: string): Promise<void> => {
-        const res = await fetch(`${API_BASE_URL}/logout`, {
+        const res = await fetch(`${API_BASE_URL}/auth/logout`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`,
+                'X-Session-Token': token,
             },
         });
 
@@ -44,10 +44,10 @@ export const authApi = {
     },
 
     getMe: async (token: string): Promise<MeResponse> => {
-        const res = await fetch(`${API_BASE_URL}/me`, {
+        const res = await fetch(`${API_BASE_URL}/auth/me`, {
             method: 'GET',
             headers: {
-                'Authorization': `Bearer ${token}`,
+                'X-Session-Token': token,
             },
         });
 

@@ -3,11 +3,18 @@ export interface Tag {
     label: string;
 }
 
+/** Объяснение из ML-пайплайна (текст + опционально скор уверенности) */
+export interface RecommendationExplanation {
+    text: string;
+    confidence?: number | null;
+}
+
 export interface Course {
     id: string | number;
     title: string;
     description: string;
     tags: Tag[];
+    recommendationExplanation?: RecommendationExplanation;
 }
 
 export interface ProfileResponse {

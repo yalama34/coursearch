@@ -1,5 +1,5 @@
 import React from 'react';
-import {Link} from 'react-router-dom';
+import {Link, useNavigate} from 'react-router-dom';
 import { useProfile } from '../../hooks/profilehook';
 import { Course } from '../../types/types';
 import './ProfilePage.css';
@@ -15,7 +15,7 @@ const MiniCourseCard: React.FC<{ course: Course }> = ({ course }) => (
                 <h3 className="course-title">{course.title}</h3>
                 <p className="course-description">{course.description}</p>
                 <div className="course-tags">
-                    {course.tags.map((tag) => (
+                    {course.tags?.map((tag) => (
                         <span key={tag.id} className="tag">{tag.label}</span>
                     ))}
                 </div>
@@ -28,8 +28,9 @@ interface ProfilePageProps {
     userId?: string;
 }
 
-export const ProfilePage: React.FC<ProfilePageProps> = ({ userId = '12345' }) => {
-    const { profile, isLoading, error } = useProfile(userId);
+export const ProfilePage: React.FC<ProfilePageProps> = ({ userId }) => {
+    const { profile, isLoading, error } = useProfile(userId || '');
+    const navigate = useNavigate();
 
     if (isLoading) return <div className="profile-page"><div className="loading-state">Загрузка...</div></div>;
     if (error) return <div className="profile-page"><div className="error-state">{error}</div></div>;
@@ -64,7 +65,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ userId = '12345' }) =>
                             ))
                         )}
                     </div>
-                    <button className="add-interest-btn">+</button>
+                    <button className="add-interest-btn" onClick={() => navigate('/setup-interests')}>+</button>
                 </div>
             </div>
 

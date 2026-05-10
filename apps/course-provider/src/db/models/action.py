@@ -29,7 +29,7 @@ class Action(Base):
 
     timestamp: Mapped[datetime] = mapped_column(
         DateTime,
-        default=datetime.now(timezone.utc),
+        default=datetime.utcnow,
         nullable=False,
     )
 

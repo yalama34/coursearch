@@ -1,3 +1,4 @@
+import asyncio
 from src.providers.stepik.client import StepikClient
 from src.schemas.course import Course
 
@@ -13,7 +14,7 @@ class StepikProvider:
 
         return {tag["id"]: tag["title"] for tag in data.get("tags", [])}
 
-    async def get_courses(self) -> list[Course]:
+    async def get_courses(self, pages_limit: int | None = None) -> list[Course]:
         all_courses = []
         page = 1
         has_next = True
@@ -48,6 +49,12 @@ class StepikProvider:
                 all_courses.append(course_obj)
             has_next = data.get("meta", {}).get("has_next", False)
             page += 1
+
+            if pages_limit is not None and page > pages_limit:
+                break
+            
+            # Небольшая пауза, чтобы не спамить API Stepik 
+            await asyncio.sleep(0.5)
 
         await self.client.close()
         return all_courses

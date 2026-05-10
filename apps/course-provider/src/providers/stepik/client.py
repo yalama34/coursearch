@@ -1,10 +1,15 @@
-from httpx import AsyncClient
+import asyncio
+import httpx
+from httpx import AsyncClient, Timeout
 
 
 class StepikClient:
     def __init__(self, client_id: str, client_secret: str):
         self.__base_url = "https://stepik.org"
-        self.client = AsyncClient(base_url=self.__base_url)
+        self.client = AsyncClient(
+            base_url=self.__base_url,
+            timeout=Timeout(60.0, connect=15.0)
+        )
         self.__client_id = client_id
         self.__client_secret = client_secret
         self._token: str | None = None
@@ -28,14 +33,29 @@ class StepikClient:
         if not self._token:
             await self._authorize()
 
-        response = await self.client.request(method, endpoint, **kwargs)
+        for attempt in range(4):
+            try:
+                response = await self.client.request(method, endpoint, **kwargs)
 
-        if response.status_code == 401:
-            await self._authorize()
-            response = await self.client.request(method, endpoint, **kwargs)
+                if response.status_code == 401:
+                    await self._authorize()
+                    response = await self.client.request(method, endpoint, **kwargs)
 
-        response.raise_for_status()
-        return response.json()
+                response.raise_for_status()
+                return response.json()
+            except httpx.RequestError:
+                if attempt == 3:
+                    raise
+                await asyncio.sleep(1.0 + attempt)
+            except httpx.HTTPStatusError as e:
+                if getattr(e, "response", None) and e.response.status_code in [429, 500, 502, 503, 504]:
+                    if attempt == 3:
+                        raise
+                    await asyncio.sleep(2.0 + attempt)
+                else:
+                    raise
+
+        raise RuntimeError("Stepik API unavailable")
 
     async def close(self) -> None:
         await self.client.aclose()

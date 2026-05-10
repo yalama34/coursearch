@@ -1,13 +1,11 @@
 from contextlib import asynccontextmanager
+import asyncio
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, BackgroundTasks, Query
 from sqlalchemy import text
-from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 from src.db.database import engine
 from src.providers.sync import run_course_sync
-
-scheduler = AsyncIOScheduler()
 
 
 @asynccontextmanager
@@ -16,15 +14,10 @@ async def lifespan(app: FastAPI):
         async with engine.begin() as conn:
             await conn.execute(text("SELECT 1"))
 
-        scheduler.add_job(run_course_sync, "interval", hours=1)
-        scheduler.start()
-
     except Exception as e:
         raise RuntimeError(f"Database connection failed: {e}")
 
     yield
-
-    scheduler.shutdown(wait=False)
 
     await engine.dispose()
 
@@ -32,6 +25,15 @@ app = FastAPI(
     title="RecSys API",
     lifespan=lifespan
 )
+
+@app.post("/sync")
+async def trigger_sync(
+    background_tasks: BackgroundTasks,
+    pages: int = Query(default=50, ge=1, description="Number of pages to sync from provider")
+):
+    """Trigger course synchronization manually"""
+    background_tasks.add_task(run_course_sync, pages)
+    return {"status": "sync_started", "pages_limit": pages}
 
 @app.get("/health")
 async def health_check():

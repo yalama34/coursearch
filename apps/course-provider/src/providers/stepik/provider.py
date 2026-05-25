@@ -52,8 +52,7 @@ class StepikProvider:
 
             if pages_limit is not None and page > pages_limit:
                 break
-            
-            # Небольшая пауза, чтобы не спамить API Stepik 
+
             await asyncio.sleep(0.5)
 
         await self.client.close()

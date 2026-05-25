@@ -4,9 +4,10 @@ from src.schemas.course import Course
 
 
 class StepikProvider:
+    source_name = "stepik"
+
     def __init__(self, client: StepikClient):
         self.client = client
-        self.source_name = "stepik"
 
     async def _fetch_tags(self, tag_ids: set[int]) -> dict[int, str]:
         params = [("ids[]", tag_id) for tag_id in tag_ids]
@@ -52,8 +53,7 @@ class StepikProvider:
 
             if pages_limit is not None and page > pages_limit:
                 break
-            
-            # Небольшая пауза, чтобы не спамить API Stepik 
+
             await asyncio.sleep(0.5)
 
         await self.client.close()

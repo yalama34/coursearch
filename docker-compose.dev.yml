@@ -108,7 +108,7 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-      chroma:
+      redis:
         condition: service_healthy
       ml_service:
         condition: service_healthy

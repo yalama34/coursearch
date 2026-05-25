@@ -1,4 +1,5 @@
 from sqlalchemy import select
+from sqlalchemy.orm import selectinload
 
 from src.db.repositories.base_repository import BaseRepository
 from src.domain.enum.action_type import ActionType
@@ -11,8 +12,6 @@ from src.db.models import (
     user_tags
 )
 
-
-from sqlalchemy.orm import selectinload
 
 class UserRepository(BaseRepository):
     """Repository to make selects from user table"""

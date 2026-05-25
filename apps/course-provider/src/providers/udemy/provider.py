@@ -6,11 +6,12 @@ from src.providers.udemy.client import UdemyClient
 
 
 class UdemyProvider:
+    source_name = "udemy"
+
     def __init__(self, client: UdemyClient):
-        self.source_name = "udemy"
         self.__udemy_client = client
 
-    async def get_courses(self,pages_limit: int | None = None) -> list[Course]:
+    async def get_courses(self, pages_limit: int | None = None) -> list[Course]:
         all_courses: list[Course] = []
         page = 1
         while True:

@@ -3,6 +3,6 @@ from enum import Enum
 
 class ActionType(str, Enum):
     VIEW = "view"
-    CLICK = "click"
+    CLICK_LINK = "click_link"
     LIKE = "like"
-    EXPLICIT = "explicit"
+    FEEDBACK = "feedback"

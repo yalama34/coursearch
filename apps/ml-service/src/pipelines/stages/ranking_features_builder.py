@@ -76,23 +76,23 @@ class RankingFeaturesBuilder:
             select(
                 func.count().filter(
                     (Action.action_type == "view")
-                    & (Action.timestamp >= ts_7d)
-                    & (Action.timestamp < now_ts)
+                    & (Action.created_at >= ts_7d)
+                    & (Action.created_at < now_ts)
                 ).label("user_views_7d"),
                 func.count().filter(
                     (Action.action_type == "like")
-                    & (Action.timestamp >= ts_7d)
-                    & (Action.timestamp < now_ts)
+                    & (Action.created_at >= ts_7d)
+                    & (Action.created_at < now_ts)
                 ).label("user_likes_7d"),
                 func.count().filter(
                     (Action.action_type == "view")
-                    & (Action.timestamp >= ts_30d)
-                    & (Action.timestamp < now_ts)
+                    & (Action.created_at >= ts_30d)
+                    & (Action.created_at < now_ts)
                 ).label("user_views_30d"),
                 func.count().filter(
                     (Action.action_type == "like")
-                    & (Action.timestamp >= ts_30d)
-                    & (Action.timestamp < now_ts)
+                    & (Action.created_at >= ts_30d)
+                    & (Action.created_at < now_ts)
                 ).label("user_likes_30d"),
             )
             .where(Action.user_id == user_id)
@@ -104,8 +104,8 @@ class RankingFeaturesBuilder:
             .where(
                 Action.user_id == user_id,
                 Action.action_type == "view",
-                Action.timestamp >= ts_7d,
-                Action.timestamp < now_ts,
+                Action.created_at >= ts_7d,
+                Action.created_at < now_ts,
             )
         )
         user_unique_courses_7d = float((await self.__db_session.execute(uniq_courses_q)).scalar() or 0)
@@ -117,8 +117,8 @@ class RankingFeaturesBuilder:
             .where(
                 Action.user_id == user_id,
                 Action.action_type == "view",
-                Action.timestamp >= ts_7d,
-                Action.timestamp < now_ts,
+                Action.created_at >= ts_7d,
+                Action.created_at < now_ts,
             )
         )
         user_unique_tags_7d = float((await self.__db_session.execute(uniq_tags_q)).scalar() or 0)

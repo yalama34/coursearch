@@ -4,15 +4,15 @@ import LogoImage from '../components/assets/coursearch_logo.png';
 export const mockProfile: ProfileData = {
     userId: '12345',
     name: 'Имя пользователя',
-    interests: [/*
+    interests: [
         { id: '1', label: 'Frontend' },
         { id: '2', label: 'JavaScript' },
         { id: '3', label: 'TypeScript' },
         { id: '4', label: 'Python' },
         { id: '5', label: 'Data Science' },
-        { id: '6', label: 'Backend' },*/
+        { id: '6', label: 'Backend' },
     ],
-    favoriteCourses: [/*
+    favoriteCourses: [
         {
             id: '1',
             title: 'Introduction to React',
@@ -48,12 +48,12 @@ export const mockProfile: ProfileData = {
                 { id: '4', label: 'Python' },
                 { id: '6', label: 'Backend' },
             ],
-        },*/
+        },
     ],
 };
 
 export const mockRecommendations: RecommendationResponse = {
-    recommendations: [/*
+    recommendations: [
         {
             id: '1',
             title: 'Advanced React Patterns',
@@ -143,7 +143,7 @@ export const mockRecommendations: RecommendationResponse = {
                 { id: '6', label: 'Backend' },
                 { id: '17', label: 'Architecture' },
             ],
-        },*/
+        },
     ],
 };
 

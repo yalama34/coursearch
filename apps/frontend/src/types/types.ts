@@ -12,9 +12,11 @@ export interface RecommendationExplanation {
 export interface Course {
     id: string | number;
     title: string;
+    author: string;
     description: string;
     tags: Tag[];
     recommendationExplanation?: RecommendationExplanation;
+    imageUrl: string;
 }
 
 export interface ProfileResponse {

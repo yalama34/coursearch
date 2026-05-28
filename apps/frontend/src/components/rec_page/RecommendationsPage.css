@@ -6,7 +6,7 @@
 .page-title {
     font-size: 48px;
     font-weight: bold;
-    color: #FFF5BA;
+    color: var(--color-text-primary);
     margin-bottom: 32px;
 }
 

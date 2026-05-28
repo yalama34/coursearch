@@ -1,5 +1,3 @@
-from pydemy import Udemy
-
 from src.schemas.course import Course
 from src.providers.udemy.mapper import map_udemy_course
 from src.providers.udemy.client import UdemyClient
@@ -15,7 +13,7 @@ class UdemyProvider:
         all_courses: list[Course] = []
         page = 1
         while True:
-            raw_courses = self.__udemy_client.get_courses_from_api(page, pages_limit)
+            raw_courses = self.__udemy_client.get_courses_from_api(page)
 
             if not raw_courses:
                 break

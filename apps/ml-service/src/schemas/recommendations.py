@@ -11,3 +11,10 @@ class RecommendationItem(BaseModel):
 class RecommendationResponse(BaseModel):
     user_id: int
     items: list[RecommendationItem]
+
+class ExplanationItem(BaseModel):
+    course_id: int
+    text: str
+class ExplanationsResponse(BaseModel):
+    user_id: int
+    explanations: list[ExplanationItem]

@@ -10,6 +10,7 @@ from src.db.models.course import Course
 from src.schemas.recommendations import ExplanationItem, ExplanationsResponse
 from src.integrations.llm.services.explanation import LLMExplanation
 
+
 logger = logging.getLogger(__name__)
 
 def _explanation_cache_key(user_id: int, course_id: int) -> str:

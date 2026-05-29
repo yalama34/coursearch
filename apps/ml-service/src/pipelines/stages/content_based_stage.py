@@ -12,8 +12,6 @@ from src.domain.recommendation.pipeline_order import StageName
 from src.engine.chroma_client import ChromaClient
 from src.engine.embeddings import EmbeddingEngine
 from src.db.models import Course, User
-from src.integrations.llm.client import LLMClient
-from src.integrations.llm.services.explanation import LLMExplanation
 
 
 logger = logging.getLogger(__name__)
@@ -98,36 +96,14 @@ class ContentBasedStage:
         courses_result = await self.__db_session.execute(courses_query)
         courses_db = courses_result.scalars().all()
 
-        courses_for_llm = []
-        for course in courses_db:
-            courses_for_llm.append({
-                "course_id": course.course_id,
-                "name": course.name,
-                "tags": [tag.name for tag in course.tags]
-            })
-
-        llm_explainer = LLMExplanation()
-        generated_explanations = await llm_explainer.get_explanations(
-            user_tags=user_tags_list,
-            courses_list=courses_for_llm
-        )
-
-        explanations_dict = {
-            item.get("course_id"): item.get("explanation")
-            for item in generated_explanations
-            if "course_id" in item and "explanation" in item
-        }
-
         result_candidates = []
 
         for cid in final_course_ids:
             existing_candidate = next((c for c in candidates if c.item_id == cid), None)
             old_confidence = existing_candidate.explanation.confidence if existing_candidate and existing_candidate.explanation else None
 
-            explanation_text = explanations_dict.get(cid, "Подходит по вашим интересам (на основе тегов)")
-
             explanation = RecommendationExplanation(
-                text=explanation_text,
+                text="",
                 confidence=old_confidence
             )
 

@@ -3,12 +3,12 @@ from typing import Annotated
 from fastapi import Depends
 import redis.asyncio as redis
 
-from src.settings import REDIS_HOST, REDIS_PORT
+from src.settings import settings
 
 
 redis_client = redis.Redis(
-    host=REDIS_HOST,
-    port=REDIS_PORT,
+    host=settings.REDIS_HOST,
+    port=settings.REDIS_PORT,
     decode_responses=True,
 )
 

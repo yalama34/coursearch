@@ -1,50 +1,21 @@
+from pydemy.models import Course as UdemyCourse
+
 from src.schemas.course import Course
 
-
-LEVEL_MAPPING = {
-    "Beginner Level": "beginner",
-    "Intermediate Level": "intermediate",
-    "Expert Level": "advanced",
-    "All Levels": "all",
-}
-
-
-def map_udemy_course(raw_course: dict) -> Course:
-    category = None
-
-    if raw_course.get("primary_category"):
-        category = raw_course["primary_category"].get("title")
-
+def map_udemy_course(udemy_course: UdemyCourse) -> Course:
     tags: list[str] = []
 
-    if category:
-        tags.append(category)
-
-    objectives = raw_course.get("objectives_summary") or []
-
-    for objective in objectives:
-        if isinstance(objective, str):
-            tags.append(objective[:64])
-
-    difficulty = LEVEL_MAPPING.get(
-        raw_course.get("instructional_level"),
-        raw_course.get("instructional_level"),
-    )
+    if udemy_course.locale and udemy_course.locale.title:
+        tags.append(udemy_course.locale.title)
+    if udemy_course.instructor_name:
+        tags.append(udemy_course.instructor_name)
 
     return Course(
-        course_id=raw_course["id"],
-        name=raw_course.get("title")
-        or "Unknown Course",
-        description=(
-            raw_course.get("headline")
-            or raw_course.get("description")
-        ),
-        difficulty=difficulty,
-        link=(
-            f'https://www.udemy.com{raw_course.get("url")}'
-            if raw_course.get("url")
-            else None
-        ),
+        course_id=udemy_course.id,
+        name=udemy_course.title or "Unknown Course",
+        description=udemy_course.headline,
+        difficulty=None,
+        link=f"https://www.udemy.com{udemy_course.url}" if udemy_course.url else None,
         source="udemy",
         tags=list(set(filter(None, tags))),
     )

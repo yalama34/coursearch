@@ -126,6 +126,8 @@ services:
       DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD}
       DB_NAME: ${DB_NAME}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
 
     depends_on:
       postgres:
@@ -150,6 +152,9 @@ services:
       # chroma
       CHROMA_HOST: chroma
       CHROMA_PORT: 8000
+      #redis
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
       # ml-service
       ML_SERVICE_URL: http://ml_service:8001
 
@@ -202,6 +207,8 @@ services:
 
       STEPIK_CLIENT_ID: ${STEPIK_CLIENT_ID}
       STEPIK_CLIENT_SECRET: ${STEPIK_CLIENT_SECRET}
+      UDEMY_CLIENT_ID: ${UDEMY_CLIENT_ID}
+      UDEMY_CLIENT_SECRET: ${UDEMY_CLIENT_SECRET}
       ENABLED_PROVIDERS: ${ENABLED_PROVIDERS}
 
     depends_on:

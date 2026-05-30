@@ -22,7 +22,6 @@ class ContentBasedStage:
         self.__db_session: AsyncSession = session
         self.__chroma_client = ChromaClient()
         self.__embedding_engine = EmbeddingEngine(self.__model_path)
-        self.__llm_client = LLMClient()
 
     @property
     def stage_name(self) -> str:

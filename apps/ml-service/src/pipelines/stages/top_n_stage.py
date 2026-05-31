@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
 
 from src.db.models import Course, Action
+from src.domain.enum.action_type import ActionType
 from src.schemas.recommendations import RecommendationItem, RecommendationExplanation
 from src.domain.recommendation.pipeline_order import StageName
 
@@ -86,10 +87,10 @@ class TopNStage:
                     Course.course_id,
                     func.count(
                         Action.action_id
-                    ).filter(Action.action_type == 'view').label('views'),
+                    ).filter(Action.action_type == ActionType.VIEW).label('views'),
                     func.count(
                         Action.action_id
-                    ).filter(Action.action_type == 'like').label('likes')
+                    ).filter(Action.action_type == ActionType.LIKE).label('likes')
                 )
                 .outerjoin(Action, Course.course_id == Action.course_id)
                 .group_by(Course.course_id)

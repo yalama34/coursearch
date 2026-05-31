@@ -12,6 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.db.models.association_tables import course_tags
 from src.db.models import User, Course, Action
+from src.domain.enum.action_type import ActionType
 
 
 logger = logging.getLogger(__name__)
@@ -75,22 +76,22 @@ class RankingFeaturesBuilder:
         agg_q = (
             select(
                 func.count().filter(
-                    (Action.action_type == "view")
+                    (Action.action_type == ActionType.VIEW)
                     & (Action.created_at >= ts_7d)
                     & (Action.created_at < now_ts)
                 ).label("user_views_7d"),
                 func.count().filter(
-                    (Action.action_type == "like")
+                    (Action.action_type == ActionType.LIKE)
                     & (Action.created_at >= ts_7d)
                     & (Action.created_at < now_ts)
                 ).label("user_likes_7d"),
                 func.count().filter(
-                    (Action.action_type == "view")
+                    (Action.action_type == ActionType.VIEW)
                     & (Action.created_at >= ts_30d)
                     & (Action.created_at < now_ts)
                 ).label("user_views_30d"),
                 func.count().filter(
-                    (Action.action_type == "like")
+                    (Action.action_type == ActionType.LIKE)
                     & (Action.created_at >= ts_30d)
                     & (Action.created_at < now_ts)
                 ).label("user_likes_30d"),
@@ -103,7 +104,7 @@ class RankingFeaturesBuilder:
             select(func.count(distinct(Action.course_id)))
             .where(
                 Action.user_id == user_id,
-                Action.action_type == "view",
+                Action.action_type == ActionType.VIEW,
                 Action.created_at >= ts_7d,
                 Action.created_at < now_ts,
             )
@@ -116,7 +117,7 @@ class RankingFeaturesBuilder:
             .join(course_tags, course_tags.c.course_id == Action.course_id)
             .where(
                 Action.user_id == user_id,
-                Action.action_type == "view",
+                Action.action_type == ActionType.VIEW,
                 Action.created_at >= ts_7d,
                 Action.created_at < now_ts,
             )

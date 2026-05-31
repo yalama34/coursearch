@@ -1,8 +1,8 @@
-"""Initial migration
+"""initial_migration
 
-Revision ID: f34b4750ce72
+Revision ID: c0660527eb83
 Revises: 
-Create Date: 2026-05-05 23:28:16.069584
+Create Date: 2026-05-30 20:38:37.007205
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = 'f34b4750ce72'
+revision: str = 'c0660527eb83'
 down_revision: Union[str, Sequence[str], None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -47,8 +47,9 @@ def upgrade() -> None:
     sa.Column('action_id', sa.Integer(), nullable=False),
     sa.Column('user_id', sa.Integer(), nullable=False),
     sa.Column('course_id', sa.Integer(), nullable=False),
-    sa.Column('type', sa.String(length=32), nullable=False),
-    sa.Column('timestamp', sa.DateTime(), nullable=False),
+    sa.Column('type', sa.Enum('VIEW', 'CLICK_LINK', 'LIKE', 'FEEDBACK', name='actiontype'), nullable=False),
+    sa.Column('created_at', sa.DateTime(timezone=True), nullable=False),
+    sa.Column('value', sa.Integer(), nullable=True),
     sa.ForeignKeyConstraint(['course_id'], ['courses.course_id'], ondelete='CASCADE'),
     sa.ForeignKeyConstraint(['user_id'], ['users.user_id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('action_id')

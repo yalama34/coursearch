@@ -18,14 +18,16 @@ def _recommendations_cache_key(user_id: int, limit: int) -> str:
 async def get_recommendations(
     user_id: int,
     limit: int = 10,
+    force: bool = False,
     redis=Depends(get_redis),
 ):
     """
     Return specific recommendations for user using ``RecommendationPipeline``.
     Cached in Redis when configured (key ``recs:user:{user_id}:limit:{limit}``).
+    When ``force=True``, skip the cache lookup and compute recommendations immediately.
     """
     cache_key = _recommendations_cache_key(user_id, limit)
-    if redis is not None:
+    if not force and redis is not None:
         cached = await redis.get(cache_key)
         if cached is not None:
             return RecommendationResponse.model_validate_json(cached)

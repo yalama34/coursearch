@@ -21,6 +21,8 @@ export const mockProfile: ProfileData = {
                 { id: '1', label: 'Frontend' },
                 { id: '2', label: 'JavaScript' },
             ],
+            author: 'Me',
+            imageUrl: '',
         },
         {
             id: '2',
@@ -30,6 +32,8 @@ export const mockProfile: ProfileData = {
                 { id: '3', label: 'TypeScript' },
                 { id: '2', label: 'JavaScript' },
             ],
+            author: 'Me',
+            imageUrl: '',
         },
         {
             id: '3',
@@ -39,6 +43,8 @@ export const mockProfile: ProfileData = {
                 { id: '4', label: 'Python' },
                 { id: '5', label: 'Data Science' },
             ],
+            author: 'Me',
+            imageUrl: '',
         },
         {
             id: '4',
@@ -48,6 +54,8 @@ export const mockProfile: ProfileData = {
                 { id: '4', label: 'Python' },
                 { id: '6', label: 'Backend' },
             ],
+            author: 'Me',
+            imageUrl: '',
         },
     ],
 };
@@ -62,6 +70,8 @@ export const mockRecommendations: RecommendationResponse = {
                 { id: '1', label: 'Frontend' },
                 { id: '2', label: 'JavaScript' },
             ],
+            author: 'Me',
+            imageUrl: '',
         },
         {
             id: '2',
@@ -71,6 +81,8 @@ export const mockRecommendations: RecommendationResponse = {
                 { id: '6', label: 'Backend' },
                 { id: '9', label: 'Node.js' },
             ],
+            author: 'Me',
+            imageUrl: '',
         },
         {
             id: '3',
@@ -80,6 +92,8 @@ export const mockRecommendations: RecommendationResponse = {
                 { id: '4', label: 'Python' },
                 { id: '5', label: 'Data Science' },
             ],
+            author: 'Me',
+            imageUrl: '',
         },
         {
             id: '4',
@@ -89,6 +103,8 @@ export const mockRecommendations: RecommendationResponse = {
                 { id: '10', label: 'DevOps' },
                 { id: '11', label: 'Docker' },
             ],
+            author: 'Me',
+            imageUrl: '',
         },
         {
             id: '5',
@@ -98,6 +114,8 @@ export const mockRecommendations: RecommendationResponse = {
                 { id: '6', label: 'Backend' },
                 { id: '12', label: 'GraphQL' },
             ],
+            author: 'Me',
+            imageUrl: '',
         },
         {
             id: '6',
@@ -107,6 +125,8 @@ export const mockRecommendations: RecommendationResponse = {
                 { id: '1', label: 'Frontend' },
                 { id: '13', label: 'CSS' },
             ],
+            author: 'Me',
+            imageUrl: '',
         },
         {
             id: '7',
@@ -116,6 +136,8 @@ export const mockRecommendations: RecommendationResponse = {
                 { id: '6', label: 'Backend' },
                 { id: '14', label: 'Database' },
             ],
+            author: 'Me',
+            imageUrl: '',
         },
         {
             id: '8',
@@ -125,6 +147,8 @@ export const mockRecommendations: RecommendationResponse = {
                 { id: '10', label: 'DevOps' },
                 { id: '15', label: 'AWS' },
             ],
+            author: 'Me',
+            imageUrl: '',
         },
         {
             id: '9',
@@ -134,6 +158,8 @@ export const mockRecommendations: RecommendationResponse = {
                 { id: '1', label: 'Frontend' },
                 { id: '16', label: 'Mobile' },
             ],
+            author: 'Me',
+            imageUrl: '',
         },
         {
             id: '10',
@@ -143,6 +169,8 @@ export const mockRecommendations: RecommendationResponse = {
                 { id: '6', label: 'Backend' },
                 { id: '17', label: 'Architecture' },
             ],
+            author: 'Me',
+            imageUrl: '',
         },
     ],
 };

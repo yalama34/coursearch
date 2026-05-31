@@ -143,3 +143,21 @@
     font-weight: 600;
     font-size: 14px;
 }
+
+.like-btn {
+    margin-top: 16px;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 20px;
+    background: var(--color-surface);
+    color: var(--color-text-secondary);
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition-spring);
+}
+.like-btn:hover { transform: scale(1.05); }
+.like-btn:active { transform: scale(0.95); }
+.like-btn.liked {
+    background: #ff4d4d;
+    color: white;
+}

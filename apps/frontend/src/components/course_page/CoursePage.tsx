@@ -2,10 +2,12 @@ import React from 'react';
 import { useParams } from 'react-router-dom';
 import { useCourse } from '../../hooks/coursehook';
 import './CoursePage.css';
+import {useCourseTracking} from "../../hooks/courseTrackHook.ts";
 
 export const CoursePage: React.FC = () => {
     const { id } = useParams<{ id: string }>();
     const { course, isLoading, error } = useCourse(id);
+    const { isLiked, handleLike } = useCourseTracking(id);
 
     if (isLoading) return <div className="course-page">Loading...</div>;
     if (error) return <div className="course-page" style={{color: 'red'}}>{error}</div>;
@@ -22,7 +24,18 @@ export const CoursePage: React.FC = () => {
                             <div className="image-icon-large"></div>
                         )}
                     </div>
-                    <h1 className="course-title-course-page">{course.title}</h1>
+                    <div className="course-info-block">
+                        <h1 className="course-title">{course.title}</h1>
+                        <p className="course-description">{course.description}</p>
+
+                        <button
+                            className={`like-btn ${isLiked ? 'liked' : ''}`}
+                            onClick={handleLike}
+                            aria-label="Like course"
+                        >
+                            {isLiked ? '❤️ Liked' : '🤍 Like'}
+                        </button>
+                    </div>
                 </div>
 
                 <div className="course-author">{course.author || 'Нет Автора'}</div>
@@ -31,7 +44,7 @@ export const CoursePage: React.FC = () => {
             <p className="course-description-course-page">{course.description}</p>
 
             <div className="tags-section">
-                <div className="tags-label">Тэги Курса</div>
+                <div className="tags-label">Теги Курса</div>
                 <div className="tags-container">
                     <div className="tags-list">
                         {course.tags.map((tag) => (

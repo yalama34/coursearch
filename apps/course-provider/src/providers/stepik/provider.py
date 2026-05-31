@@ -1,4 +1,5 @@
 import asyncio
+
 from src.providers.stepik.client import StepikClient
 from src.schemas.course import Course
 
@@ -21,7 +22,7 @@ class StepikProvider:
         has_next = True
 
         while has_next:
-            data = await self.client.send_request("GET", "/api/courses", params={"page": page})
+            data = await self.client.send_request("GET", "/api/courses", params={"page": page, "tag": 1})
             raw_courses = data.get("courses", [])
 
             tag_ids_from_request = set()
@@ -57,4 +58,6 @@ class StepikProvider:
             await asyncio.sleep(0.5)
 
         await self.client.close()
+
+
         return all_courses

@@ -28,6 +28,11 @@ class User(Base):
         nullable=True,
     )
 
+    description: Mapped[str | None] = mapped_column(
+        Text,
+        nullable=True,
+    )
+
     actions: Mapped[List["Action"]] = relationship(
         "Action",
         back_populates="user",

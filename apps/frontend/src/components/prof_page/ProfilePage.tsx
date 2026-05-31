@@ -1,7 +1,6 @@
 import React from 'react';
-import {Link, useNavigate} from 'react-router-dom';
+import {useNavigate} from 'react-router-dom';
 import { useProfile } from '../../hooks/profilehook';
-import { Course } from '../../types/types';
 import './ProfilePage.css';
 import {CourseCard} from "../course_card/CourseCard.tsx";
 
@@ -12,6 +11,8 @@ interface ProfilePageProps {
 }
 
 export const ProfilePage: React.FC<ProfilePageProps> = ({ userId }) => {
+    const userIdMock = '12345';
+    const a = userId;
     const { profile, isLoading, error } = useProfile(userId || '');
     const navigate = useNavigate();
 
@@ -64,7 +65,13 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ userId }) => {
               </span>
                         ))}
                     </div>
-                    <button className="add-interest-btn" role="button">+</button>
+                    <button
+                        className="add-interest-btn"
+                        role="button"
+                        onClick={() => navigate('/setup-interests')}
+                    >
+                        +
+                    </button>
                 </div>
             </div>
 

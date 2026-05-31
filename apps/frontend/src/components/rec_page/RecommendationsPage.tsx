@@ -1,7 +1,5 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
 import { useProfile } from '../../hooks/profilehook';
-import { Course } from '../../types/types';
 import './RecommendationsPage.css';
 import { CourseCard } from '../course_card/CourseCard';
 import { CourseCardSkeleton } from '../course_card_skeleton/course_card_skeleton.tsx';
@@ -14,6 +12,8 @@ interface RecommendationsPageProps {
 }
 
 export const RecommendationsPage: React.FC<RecommendationsPageProps> = ({ userId }) => {
+    const userIdMock = '12345';
+    const a = userId;
     const { recommendations, isLoading, error } = useProfile(userId || '');
 
     if (isLoading) return <div className="recommendations-page"><div className="loading-state">Загрузка...</div></div>;

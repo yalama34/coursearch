@@ -113,6 +113,20 @@ class UserRepository(BaseRepository):
 
         await self.session.flush()
 
+    async def set_user_description(
+            self,
+            user_id: int,
+            description: str | None,
+    ) -> None:
+        """Set user description"""
+        user = await self.get_user(user_id)
+
+        if not user:
+            return
+
+        user.description = description
+
+        await self.session.flush()
 
     async def get_user_liked_courses(
             self,
@@ -127,7 +141,7 @@ class UserRepository(BaseRepository):
             .join(Action, Course.course_id == Action.course_id)
             .where(
                 Action.user_id == user_id,
-                Action.action_type == ActionType.LIKE.value,
+                Action.action_type == ActionType.LIKE,
             )
         )
 

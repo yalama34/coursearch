@@ -60,9 +60,10 @@ class MLServiceClient:
 
 
     async def get_recommendations(
-        self,
-        user_id: int,
-        limit: int = 10,
+            self,
+            user_id: int,
+            limit: int = 10,
+            force: bool = False,
     ) -> RecommendationResponse:
         """
         Get recommendations for a user by user ID
@@ -71,6 +72,10 @@ class MLServiceClient:
         """
         data = await self.get(
             path="/recommendations",
-            params={"user_id": user_id, "limit": limit},
+            params={
+                "user_id": user_id,
+                "limit": limit,
+                "force": force,
+            },
         )
         return RecommendationResponse.model_validate(data)

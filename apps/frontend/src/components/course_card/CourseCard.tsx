@@ -46,7 +46,9 @@ export const CourseCard: React.FC<CourseCardProps> = ({ course, index = 0 }) => 
                     <p className="course-description">{course.description}</p>
                     <div className="course-tags">
                         {course.tags.map((tag) => (
-                            <span key={tag.id} className="tag-pill">{tag.label}</span>
+                            <span key={tag.id} className="tag-pill" title={tag.label}>
+                                {tag.label}
+                            </span>
                         ))}
                     </div>
                 </div>

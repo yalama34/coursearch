@@ -1,22 +1,28 @@
 import React from 'react';
-import {useNavigate} from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../hooks/useAuth';
 import { useProfile } from '../../hooks/profilehook';
 import './ProfilePage.css';
-import {CourseCard} from "../course_card/CourseCard.tsx";
-
-const FAVORITE_COURSES_SKELETON_COUNT = 5;
+import { CourseCard } from '../course_card/CourseCard.tsx';
 
 interface ProfilePageProps {
-    userId?: string;
+    userId?: string | number;
 }
 
 export const ProfilePage: React.FC<ProfilePageProps> = ({ userId }) => {
-    const userIdMock = '12345';
-    const a = userId;
-    const { profile, isLoading, error } = useProfile(userId || '');
+    const { user, isLoading: authLoading } = useAuth();
+    const effectiveUserId = userId ?? user?.user_id ?? '';
+    const { profile, isLoading, error } = useProfile(effectiveUserId);
     const navigate = useNavigate();
 
-    if (isLoading) return <div className="profile-page"><div className="loading-state">Загрузка...</div></div>;
+    if (authLoading || isLoading) {
+        return (
+            <div className="profile-page">
+                <div className="loading-state">Загрузка...</div>
+            </div>
+        );
+    }
+
     if (error) {
         return (
             <div className="profile-page">
@@ -61,8 +67,8 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ userId }) => {
                                 className="interest-tag"
                                 style={{ animationDelay: `${index * 0.03}s` }}
                             >
-                {tag.label}
-              </span>
+                                {tag.label}
+                            </span>
                         ))}
                     </div>
                     <button

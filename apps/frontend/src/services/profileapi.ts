@@ -114,3 +114,20 @@ export const getRecommendationExplanations = async (
     }
     return res.json();
 };
+
+
+export const updateDescription = async (description: string, token: string): Promise<void> => {
+    const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/profile/description`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ description }),
+    });
+
+    if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.detail || 'Failed to update description');
+    }
+};

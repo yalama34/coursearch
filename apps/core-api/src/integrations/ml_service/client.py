@@ -2,7 +2,7 @@ import asyncio
 
 import httpx
 
-from src.integrations.ml_service.schemas import RecommendationResponse
+from src.integrations.ml_service.schemas import ExplanationsResponse, RecommendationResponse
 
 class MLServiceClient:
     def __init__(self, base_url: str = "http://ml-service:8001"):
@@ -79,3 +79,17 @@ class MLServiceClient:
             },
         )
         return RecommendationResponse.model_validate(data)
+
+    async def get_explanations(
+            self,
+            user_id: int,
+            course_ids: list[int],
+    ) -> ExplanationsResponse:
+        data = await self.get(
+            path="/recommendations/explanations",
+            params={
+                "user_id": user_id,
+                "course_ids": ",".join(str(cid) for cid in course_ids),
+            },
+        )
+        return ExplanationsResponse.model_validate(data)

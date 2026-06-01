@@ -43,6 +43,16 @@ export interface RecommendationsData {
     recommendations: Course[];
 }
 
+export interface ExplanationItem {
+    course_id: number;
+    text: string;
+}
+
+export interface ExplanationsResponse {
+    user_id: number;
+    explanations: ExplanationItem[];
+}
+
 export interface AuthPayload {
     nickname: string;
     password: string;

@@ -1,41 +1,35 @@
-import { renderHook, waitFor } from '@testing-library/react'
-import { useProfile } from '../hooks/profilehook.ts'
-import { getProfile, getRecommendations} from '../services/profileapi'
+import { renderHook, waitFor } from '@testing-library/react';
+import { useProfile } from '../hooks/profilehook.ts';
+import { getProfile } from '../services/profileapi';
 
 vi.mock('../services/profileapi', () => ({
     getProfile: vi.fn(),
-    getRecommendations: vi.fn(),
-}))
+}));
 
-const mockedGetProfile = vi.mocked(getProfile)
-const mockedGetRecommendations = vi.mocked(getRecommendations)
+const mockedGetProfile = vi.mocked(getProfile);
 
 describe('useProfile', () => {
     beforeEach(() => {
-        vi.clearAllMocks()
-    })
+        vi.clearAllMocks();
+    });
 
-    it('should fetch profile and recommendations', async () => {
+    it('should fetch profile', async () => {
         mockedGetProfile.mockResolvedValueOnce({
             userId: '1',
             name: 'Test',
             interests: [],
             favoriteCourses: [],
-        })
-        mockedGetRecommendations.mockResolvedValueOnce({
-            recommendations: [{ id: '1', title: 'Course', description: 'Desc', tags: [] }],
-        })
+        });
 
-        const { result } = renderHook(() => useProfile('1'))
+        const { result } = renderHook(() => useProfile('1'));
 
-        expect(result.current.isLoading).toBe(true)
+        expect(result.current.isLoading).toBe(true);
 
-        await waitFor(() => expect(result.current.isLoading).toBe(false))
+        await waitFor(() => expect(result.current.isLoading).toBe(false));
 
-        expect(result.current.profile?.name).toBe('Имя пользователя')
-        expect(result.current.recommendations).toHaveLength(10)
-        expect(result.current.error).toBeNull()
-    })
+        expect(result.current.profile?.name).toBe('Test');
+        expect(result.current.error).toBeNull();
+    });
 
     it('should refetch data when refetch is called', async () => {
         mockedGetProfile.mockResolvedValue({
@@ -43,24 +37,22 @@ describe('useProfile', () => {
             name: 'Test',
             interests: [],
             favoriteCourses: [],
-        })
-        mockedGetRecommendations.mockResolvedValue({ recommendations: [] })
+        });
 
-        const { result } = renderHook(() => useProfile('1'))
-        await waitFor(() => expect(result.current.isLoading).toBe(true))
+        const { result } = renderHook(() => useProfile('1'));
+        await waitFor(() => expect(result.current.isLoading).toBe(false));
 
-        result.current.refetch()
+        result.current.refetch();
 
-        expect(mockedGetProfile).toHaveBeenCalledTimes(0)
-        expect(mockedGetRecommendations).toHaveBeenCalledTimes(0)
-    })
+        await waitFor(() => expect(mockedGetProfile).toHaveBeenCalledTimes(2));
+    });
 
     it('should handle API errors', async () => {
-        mockedGetProfile.mockRejectedValueOnce(new Error('Network error'))
+        mockedGetProfile.mockRejectedValueOnce(new Error('Network error'));
 
-        const { result } = renderHook(() => useProfile('1'))
+        const { result } = renderHook(() => useProfile('1'));
 
-        await waitFor(() => expect(result.current.error).toBeNull())
-        expect(result.current.isLoading).toBe(false)
-    })
-})
+        await waitFor(() => expect(result.current.error).toBe('Network error'));
+        expect(result.current.isLoading).toBe(false);
+    });
+});

@@ -29,6 +29,7 @@ describe('RecommendationsPage', () => {
         mockedUseProfile.mockReturnValue({
             recommendations: [],
             isLoading: true,
+            isLoadingExplanations: false,
             error: null,
             refetch: vi.fn(),
         } as any);
@@ -44,9 +45,10 @@ describe('RecommendationsPage', () => {
     });
 
     it('shows error state', () => {
-        mockedUseProfile.mockReturnValue({
+        mockedUseRecommendations.mockReturnValue({
             recommendations: [],
             isLoading: false,
+            isLoadingExplanations: false,
             error: 'Failed to load',
             refetch: vi.fn(),
         } as any);
@@ -61,7 +63,7 @@ describe('RecommendationsPage', () => {
     });
 
     it('renders recommendations grid', () => {
-        mockedUseProfile.mockReturnValue({
+        mockedUseRecommendations.mockReturnValue({
             recommendations: [
                 {
                     id: '1',
@@ -81,6 +83,7 @@ describe('RecommendationsPage', () => {
                 },
             ],
             isLoading: false,
+            isLoadingExplanations: false,
             error: null,
             refetch: vi.fn(),
         } as any);
@@ -97,9 +100,10 @@ describe('RecommendationsPage', () => {
     });
 
     it('has page title', () => {
-        mockedUseProfile.mockReturnValue({
+        mockedUseRecommendations.mockReturnValue({
             recommendations: [],
             isLoading: false,
+            isLoadingExplanations: false,
             error: null,
             refetch: vi.fn(),
         } as any);

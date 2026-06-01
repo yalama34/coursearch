@@ -173,6 +173,18 @@
     width: 100%;
 }
 
+.profile-description-display {
+    margin-top: 8px;
+    font-size: 14px;
+    color: var(--color-text-secondary);
+    line-height: 1.5;
+    max-width: 500px;
+}
+.profile-description-display.empty {
+    color: #666;
+    font-style: italic;
+}
+
 .save-button {
     margin-top: 24px;
     background-color: #B692E8;

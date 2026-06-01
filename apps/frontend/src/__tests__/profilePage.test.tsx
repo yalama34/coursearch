@@ -28,7 +28,6 @@ describe('ProfilePage', () => {
     it('shows loading state', () => {
         mockedUseProfile.mockReturnValue({
             profile: null,
-            recommendations: [],
             isLoading: true,
             error: null,
             refetch: vi.fn(),
@@ -46,7 +45,6 @@ describe('ProfilePage', () => {
     it('shows error state', () => {
         mockedUseProfile.mockReturnValue({
             profile: null,
-            recommendations: [],
             isLoading: false,
             error: 'Failed to load',
             refetch: vi.fn(),
@@ -72,7 +70,6 @@ describe('ProfilePage', () => {
                 ],
                 favoriteCourses: [],
             },
-            recommendations: [],
             isLoading: false,
             error: null,
             refetch: vi.fn(),
@@ -107,7 +104,6 @@ describe('ProfilePage', () => {
                     },
                 ],
             },
-            recommendations: [],
             isLoading: false,
             error: null,
             refetch: vi.fn(),

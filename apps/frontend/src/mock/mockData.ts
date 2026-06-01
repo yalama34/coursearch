@@ -72,6 +72,10 @@ export const mockRecommendations: RecommendationResponse = {
             ],
             author: 'Me',
             imageUrl: '',
+            recommendationExplanation: {
+                text: 'Этот курс подходит вам, потому что вы интересуетесь React и JavaScript.',
+                confidence: 0.87,
+            },
         },
         {
             id: '2',

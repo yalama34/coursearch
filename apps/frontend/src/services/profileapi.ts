@@ -1,4 +1,8 @@
-import { ProfileData, RecommendationsData } from '../types/types';
+import {
+    ExplanationsResponse,
+    ProfileData,
+    RecommendationsData,
+} from '../types/types';
 import { getCourseById } from './courseapi';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
@@ -49,8 +53,7 @@ export const getRecommendations = async (userId: string | number, limit: number 
         throw new Error(`Recommendations fetch failed: ${res.status}`);
     }
     const data = await res.json();
-    
-    // Бэкенд ML-сервиса возвращает массив
+
     const items = data.items || data.recommendations || [];
 
     const mappedRecommendations = await Promise.all(
@@ -58,7 +61,7 @@ export const getRecommendations = async (userId: string | number, limit: number 
             const courseId = item.item_id || item.id;
             const explanation = item.explanation
                 ? {
-                      text: item.explanation.text ?? '',
+                      text: '',
                       confidence: item.explanation.confidence ?? null,
                   }
                 : undefined;
@@ -70,14 +73,18 @@ export const getRecommendations = async (userId: string | number, limit: number 
                     title: courseDetails.title || courseDetails.name || `Курс #${courseId}`,
                     description: courseDetails.description || '',
                     tags: courseDetails.tags || [],
+                    author: courseDetails.author || '',
+                    imageUrl: courseDetails.imageUrl || '',
                     recommendationExplanation: explanation,
                 };
-            } catch (err) {
+            } catch {
                 return {
                     id: courseId,
                     title: `Курс #${courseId}`,
                     description: '',
                     tags: [],
+                    author: '',
+                    imageUrl: '',
                     recommendationExplanation: explanation,
                 };
             }
@@ -87,4 +94,40 @@ export const getRecommendations = async (userId: string | number, limit: number 
     return {
         recommendations: mappedRecommendations,
     };
+};
+
+export const getRecommendationExplanations = async (
+    userId: string | number,
+    courseIds: Array<string | number>,
+): Promise<ExplanationsResponse> => {
+    if (courseIds.length === 0) {
+        return { user_id: Number(userId), explanations: [] };
+    }
+
+    const ids = courseIds.join(',');
+    const res = await fetch(
+        `${API_BASE_URL}/recommendations/explanations?user_id=${userId}&course_ids=${ids}`,
+    );
+    if (!res.ok) {
+        if (res.status === 503) throw new Error('ML service unavailable');
+        throw new Error(`Explanations fetch failed: ${res.status}`);
+    }
+    return res.json();
+};
+
+
+export const updateDescription = async (description: string, token: string): Promise<void> => {
+    const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/profile/description`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ description }),
+    });
+
+    if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.detail || 'Failed to update description');
+    }
 };

@@ -40,6 +40,7 @@ def upgrade() -> None:
     sa.Column('nickname', sa.String(length=64), nullable=False),
     sa.Column('password', sa.String(length=255), nullable=False),
     sa.Column('jwt_token', sa.Text(), nullable=True),
+    sa.Column('description', sa.Text(), nullable=True),
     sa.PrimaryKeyConstraint('user_id'),
     sa.UniqueConstraint('nickname')
     )

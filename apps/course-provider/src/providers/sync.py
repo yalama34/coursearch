@@ -6,7 +6,9 @@ from src.providers.stepik.provider import StepikProvider
 from src.providers.contract import CourseProvider
 from src.db.repositories.course_repository import CourseRepository
 from src.db.database import async_session_maker
+from src.quality.validator import filter_valid_courses
 from src.settings import settings
+
 
 logger = logging.getLogger(__name__)
 
@@ -48,20 +50,21 @@ class CourseSync:
         :return:
         """
         if not self._providers_list:
-            print("No providers configured for sync.", flush=True)
+            logger.info("No providers configured for sync.")
             return
 
-        print(f"Starting sync_courses for {len(self._providers_list)} providers with pages_limit={pages_limit}", flush=True)
+        logger.info(f"Starting sync_courses for {len(self._providers_list)} providers with pages_limit={pages_limit}")
         repository = CourseRepository(self._db_session)
 
         for provider in self._providers_list:
-            print(f"Syncing from provider: {provider.source_name if hasattr(provider, 'source_name') else provider}", flush=True)
+            logger.info(f"Syncing from provider: {provider.source_name if hasattr(provider, 'source_name') else provider}")
             courses = await provider.get_courses(pages_limit=pages_limit)
+            courses = filter_valid_courses(courses)
             if not courses:
-                print(f"No courses returned from provider {provider.source_name if hasattr(provider, 'source_name') else provider}", flush=True)
+                logger.info(f"No courses returned from provider {provider.source_name if hasattr(provider, 'source_name') else provider}")
                 continue
                 
-            print(f"Upserting {len(courses)} courses to DB...", flush=True)
+            logger.info(f"Upserting {len(courses)} courses to DB...")
             await repository.upsert_courses(courses)
             
             tag_names: set[str] = set()
@@ -69,10 +72,10 @@ class CourseSync:
                 tag_names.update(course.tags)
                 
             if not tag_names:
-                print("No tags found in the synced courses.", flush=True)
+                logger.info("No tags found in the synced courses.")
                 continue
 
-            print(f"Upserting {len(tag_names)} tags to DB...", flush=True)
+            logger.info(f"Upserting {len(tag_names)} tags to DB...")
             tag_map = await repository.upsert_tags(sorted(tag_names))
 
             links: list[dict[str, int]] = []
@@ -84,18 +87,18 @@ class CourseSync:
                             {"course_id": course.course_id, "tag_id": tag_id}
                         )
 
-            print(f"Linking {len(links)} courses with tags in DB...", flush=True)
+            logger.info(f"Linking {len(links)} courses with tags in DB...")
             await repository.link_courses_with_tags(links)
-            print(f"Finished sync for provider: {provider.source_name if hasattr(provider, 'source_name') else provider}", flush=True)
+            logger.info(f"Finished sync for provider: {provider.source_name if hasattr(provider, 'source_name') else provider}")
 
-        print("sync_courses completed successfully.", flush=True)
+        logger.info("sync_courses completed successfully.")
 
 async def run_course_sync(pages_limit: int | None = None) -> None:
     """
     Run course syncing with allowed providers
     :return:
     """
-    print(f"run_course_sync triggered. ENABLED_PROVIDERS: {ENABLED_PROVIDERS}", flush=True)
+    logger.info(f"run_course_sync triggered. ENABLED_PROVIDERS: {ENABLED_PROVIDERS}")
     try:
         async with async_session_maker() as session:
             sync = CourseSync(session)
@@ -103,11 +106,11 @@ async def run_course_sync(pages_limit: int | None = None) -> None:
             for provider in ENABLED_PROVIDERS:
                 builder = PROVIDER_BUILDERS.get(provider)
                 if builder is None:
-                    print(f"Builder for provider '{provider}' not found.", flush=True)
+                    logger.info(f"Builder for provider '{provider}' not found.")
                     continue
                 sync.add_provider(builder(settings))
 
             await sync.sync_courses(pages_limit=pages_limit)
     except Exception as e:
-        print(f"Error during run_course_sync: {e}", flush=True)
+        logger.info(f"Error during run_course_sync: {e}")
         raise

@@ -6,7 +6,10 @@ from sqlalchemy import text
 
 from src.db.database import engine
 from src.providers.sync import run_course_sync
+from src.common.logging_config import configure_logging
 
+
+configure_logging()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):

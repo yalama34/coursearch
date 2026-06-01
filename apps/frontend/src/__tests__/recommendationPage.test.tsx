@@ -1,13 +1,13 @@
 import { render, screen } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import { RecommendationsPage } from '../components/rec_page/RecommendationsPage';
-import { useRecommendations } from '../hooks/useRecommendations';
+import { useProfile } from '../hooks/profilehook';
 import { useAuth } from '../hooks/useAuth';
 
-vi.mock('../hooks/useRecommendations');
+vi.mock('../hooks/profilehook');
 vi.mock('../hooks/useAuth');
 
-const mockedUseRecommendations = vi.mocked(useRecommendations);
+const mockedUseProfile = vi.mocked(useProfile);
 const mockedUseAuth = vi.mocked(useAuth);
 
 describe('RecommendationsPage', () => {
@@ -26,13 +26,13 @@ describe('RecommendationsPage', () => {
     });
 
     it('shows skeleton grid while loading', () => {
-        mockedUseRecommendations.mockReturnValue({
+        mockedUseProfile.mockReturnValue({
             recommendations: [],
             isLoading: true,
             isLoadingExplanations: false,
             error: null,
             refetch: vi.fn(),
-        });
+        } as any);
 
         const { container } = render(
             <BrowserRouter>
@@ -41,7 +41,7 @@ describe('RecommendationsPage', () => {
         );
 
         expect(screen.getByText('Рекомендованные курсы')).toBeInTheDocument();
-        expect(container.querySelectorAll('.course-card-skeleton, [class*="skeleton"]').length).toBeGreaterThan(0);
+        expect(container.querySelector('.course-card-skeleton')).toBeInTheDocument();
     });
 
     it('shows error state', () => {
@@ -51,7 +51,7 @@ describe('RecommendationsPage', () => {
             isLoadingExplanations: false,
             error: 'Failed to load',
             refetch: vi.fn(),
-        });
+        } as any);
 
         render(
             <BrowserRouter>
@@ -86,7 +86,7 @@ describe('RecommendationsPage', () => {
             isLoadingExplanations: false,
             error: null,
             refetch: vi.fn(),
-        });
+        } as any);
 
         render(
             <BrowserRouter>
@@ -106,7 +106,7 @@ describe('RecommendationsPage', () => {
             isLoadingExplanations: false,
             error: null,
             refetch: vi.fn(),
-        });
+        } as any);
 
         render(
             <BrowserRouter>

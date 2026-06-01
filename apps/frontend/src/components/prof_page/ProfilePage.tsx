@@ -10,12 +10,19 @@ interface ProfilePageProps {
 }
 
 export const ProfilePage: React.FC<ProfilePageProps> = ({ userId }) => {
-    const { user } = useAuth();
+    const { user, isLoading: authLoading } = useAuth();
     const effectiveUserId = userId ?? user?.user_id ?? '';
     const { profile, isLoading, error } = useProfile(effectiveUserId);
     const navigate = useNavigate();
 
-    if (isLoading) return <div className="profile-page"><div className="loading-state">Загрузка...</div></div>;
+    if (authLoading || isLoading) {
+        return (
+            <div className="profile-page">
+                <div className="loading-state">Загрузка...</div>
+            </div>
+        );
+    }
+
     if (error) {
         return (
             <div className="profile-page">

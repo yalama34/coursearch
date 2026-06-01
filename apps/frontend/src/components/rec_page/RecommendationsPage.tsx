@@ -1,6 +1,6 @@
 import React from 'react';
 import { useAuth } from '../../hooks/useAuth';
-import { useRecommendations } from '../../hooks/useRecommendations';
+import { useProfile } from '../../hooks/profilehook';
 import './RecommendationsPage.css';
 import { CourseCard } from '../course_card/CourseCard';
 import { CourseCardSkeleton } from '../course_card_skeleton/course_card_skeleton.tsx';
@@ -12,11 +12,11 @@ interface RecommendationsPageProps {
 }
 
 export const RecommendationsPage: React.FC<RecommendationsPageProps> = ({ userId }) => {
-    const { user } = useAuth();
+    const { user, isLoading: authLoading } = useAuth();
     const effectiveUserId = userId ?? user?.user_id ?? '';
-    const { recommendations, isLoading, isLoadingExplanations, error } = useRecommendations(effectiveUserId);
+    const { recommendations, isLoading, error } = useProfile(effectiveUserId);
 
-    if (isLoading) {
+    if (authLoading || isLoading) {
         return (
             <div className="recommendations-page">
                 <h1 className="page-title">Рекомендованные курсы</h1>
@@ -42,12 +42,7 @@ export const RecommendationsPage: React.FC<RecommendationsPageProps> = ({ userId
             <h1 className="page-title">Рекомендованные курсы</h1>
             <div className="courses-grid">
                 {recommendations.map((course, index) => (
-                    <CourseCard
-                        key={course.id}
-                        course={course}
-                        index={index}
-                        isExplanationLoading={isLoadingExplanations}
-                    />
+                    <CourseCard key={course.id} course={course} index={index} />
                 ))}
             </div>
         </div>

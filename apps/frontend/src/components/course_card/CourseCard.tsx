@@ -74,7 +74,9 @@ export const CourseCard: React.FC<CourseCardProps> = ({
 
                     <div className="course-tags">
                         {course.tags.map((tag) => (
-                            <span key={tag.id} className="tag-pill">{tag.label}</span>
+                            <span key={tag.id} className="tag-pill" title={tag.label}>
+                                {tag.label}
+                            </span>
                         ))}
                     </div>
                 </div>

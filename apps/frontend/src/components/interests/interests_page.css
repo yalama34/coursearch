@@ -21,6 +21,68 @@
     padding: 40px 20px;
     text-align: center;
 }
+.description-section {
+    margin-bottom: 24px;
+    text-align: left;
+    width: 100%;
+    max-width: 600px;
+}
+
+.section-label {
+    display: block;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--color-text-secondary);
+    margin-bottom: 8px;
+    opacity: 0.8;
+}
+
+.description-input {
+    width: 100%;
+    background-color: var(--color-surface);
+    border: 2px solid transparent;
+    border-radius: 8px;
+    padding: 12px;
+    color: var(--color-text-primary);
+    font-size: 14px;
+    line-height: 1.5;
+    resize: vertical;
+    outline: none;
+    transition: var(--transition-smooth);
+    font-family: inherit;
+}
+
+.description-input:focus {
+    border-color: var(--color-accent);
+    box-shadow: 0 0 0 3px rgba(182, 146, 232, 0.15);
+}
+
+.description-input::placeholder {
+    color: #888;
+}
+
+.char-count {
+    display: block;
+    text-align: right;
+    font-size: 12px;
+    color: #777;
+    margin-top: 4px;
+}
+
+.error-message {
+    color: #ff6b6b;
+    font-size: 14px;
+    margin: 12px 0;
+    text-align: center;
+}
+
+.subsection-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--color-text-secondary);
+    margin-bottom: 16px;
+    text-align: left;
+}
 
 .user-header {
     display: flex;

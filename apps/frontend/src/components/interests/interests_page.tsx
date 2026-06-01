@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, {useEffect, useState} from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
-import { updateInterests } from '../../services/profileapi';
+import {updateDescription, updateInterests} from '../../services/profileapi';
 import './interests_page.css';
+import {useProfile} from "../../hooks/profilehook.ts";
 
 const AVAILABLE_TAGS = [
     { id: '1', label: 'Frontend' },
@@ -19,10 +20,22 @@ const AVAILABLE_TAGS = [
 export const InterestSelectionPage: React.FC = () => {
     const navigate = useNavigate();
     const location = useLocation();
-    const { user, token, logout } = useAuth();
+    const { profile, isLoading } = useProfile('me');
+    const { user, token } = useAuth();
 
-    const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set([])); 
+    const [description, setDescription] = useState('');
+    const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set([]));
     const [isSaving, setIsSaving] = useState(false);
+    const [saveError, setSaveError] = useState<string | null>(null);
+
+    useEffect(() => {
+        if (profile?.description) {
+            setDescription(profile.description);
+        }
+        if (profile?.interests) {
+            setSelectedIds(new Set(profile.interests.map(i => i.id.toString())));
+        }
+    }, [profile]);
 
     const toggleTag = (id: string) => {
         const newSet = new Set(selectedIds);
@@ -35,34 +48,65 @@ export const InterestSelectionPage: React.FC = () => {
     };
 
     const handleFinish = async () => {
+        if (!token) {
+            setSaveError('Ошибка авторизации. Пожалуйста, войдите снова.');
+            return;
+        }
+
         setIsSaving(true);
+        setSaveError(null);
         try {
+            const trimmedDesc = description.trim();
+            if (trimmedDesc !== profile?.description?.trim()) {
+                await updateDescription(trimmedDesc, token);
+            }
+
             const selectedTags = Array.from(selectedIds)
                 .map(id => AVAILABLE_TAGS.find(t => t.id === id)?.label)
                 .filter(Boolean) as string[];
-            if (token) {
-                await updateInterests(selectedTags, token);
-            }
+
+            await updateInterests(selectedTags, token);
+
             if (location.state?.fromRegistration) {
                 navigate('/', { replace: true });
             } else {
                 navigate('/profile');
             }
-        } catch (error) {
-            console.error('Failed to save interests', error);
-            alert('Не удалось сохранить интересы');
+        } catch (err) {
+            console.error('Failed to save profile data', err);
+            setSaveError('Не удалось сохранить изменения. Попробуйте снова.');
         } finally {
             setIsSaving(false);
         }
     };
 
+    if (isLoading) {
+        return <div className="loading-state">Загрузка данных профиля...</div>;
+    }
+
     return (
         <main className="interest-content">
             <div className="user-header">
-                <h2 className="username">{user?.nickname || 'Имя пользователя'}</h2>
+                <h2 className="username">{user?.nickname || profile?.name || 'Имя пользователя'}</h2>
             </div>
 
-            <h3 className="page-subtitle">Выберите свои навыки и интересы</h3>
+            <h3 className="page-subtitle">Настройка профиля</h3>
+
+            <div className="description-section">
+                <label htmlFor="user-description" className="section-label">О себе</label>
+                <textarea
+                    id="user-description"
+                    className="description-input"
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    placeholder="Расскажите немного о себе, вашем опыте и целях..."
+                    rows={3}
+                    maxLength={500}
+                />
+                <span className="char-count">{description.length}/500</span>
+            </div>
+
+            <h4 className="subsection-title">Выберите свои навыки и интересы</h4>
 
             <div className="tags-container">
                 {AVAILABLE_TAGS.map((tag) => {
@@ -70,6 +114,7 @@ export const InterestSelectionPage: React.FC = () => {
                     return (
                         <button
                             key={tag.id}
+                            type="button"
                             className={`tag-pill ${isSelected ? 'selected' : 'unselected'}`}
                             onClick={() => toggleTag(tag.id)}
                         >
@@ -80,7 +125,10 @@ export const InterestSelectionPage: React.FC = () => {
                 })}
             </div>
 
+            {saveError && <p className="error-message">{saveError}</p>}
+
             <button
+                type="button"
                 className="btn-finish"
                 onClick={handleFinish}
                 disabled={isSaving}
@@ -88,6 +136,5 @@ export const InterestSelectionPage: React.FC = () => {
                 {isSaving ? 'Сохранение...' : 'Закончить редактирование'}
             </button>
         </main>
-
     );
 };

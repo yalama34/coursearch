@@ -24,6 +24,7 @@ export interface ProfileResponse {
     userId?: number;
     name: string;
     interests?: Tag[];
+    description?: string;
     favorite_courses?: Course[];
     favoriteCourses?: Course[];
 }
@@ -35,6 +36,7 @@ export interface RecommendationResponse {
 export interface ProfileData {
     userId: string;
     name: string;
+    description?: string;
     interests: Tag[];
     favoriteCourses: Course[];
 }

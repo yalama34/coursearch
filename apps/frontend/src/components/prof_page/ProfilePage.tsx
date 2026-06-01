@@ -48,6 +48,17 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ userId }) => {
                         <h2 className="profile-name">{profile.name}</h2>
                     </div>
                     <p className="profile-label">User ID: {profile.userId}</p>
+
+                    {profile.description && (
+                        <p className="profile-description-display">
+                            {profile.description}
+                        </p>
+                    )}
+                    {!profile.description && (
+                        <p className="profile-description-display empty">
+                            Описание не добавлено
+                        </p>
+                    )}
                 </div>
             </div>
 

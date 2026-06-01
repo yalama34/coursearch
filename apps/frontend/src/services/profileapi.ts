@@ -50,10 +50,9 @@ export const getRecommendations = async (userId: string | number, limit: number 
     }
     const data = await res.json();
     
-    // Бэкенд ML-сервиса возвращает массив в поле `items` вида {"item_id": 510, "explanation": {...}}
+    // Бэкенд ML-сервиса возвращает массив
     const items = data.items || data.recommendations || [];
-    
-    // Запрашиваем информацию о курсах из бэкенда
+
     const mappedRecommendations = await Promise.all(
         items.map(async (item: any) => {
             const courseId = item.item_id || item.id;

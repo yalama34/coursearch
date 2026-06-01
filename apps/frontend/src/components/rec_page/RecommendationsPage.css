@@ -10,23 +10,11 @@
     margin-bottom: 32px;
 }
 
-.courses-grid {
+.courses-grid{
     display: grid;
     grid-template-columns: repeat(5, 1fr);
     gap: 20px;
-}
-
-.course-card {
-    background-color: #A9DEF9;
-    border-radius: 12px;
-    padding: 20px;
-    min-height: 280px;
-    height: auto;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    position: relative;
-    transition: transform 0.2s, box-shadow 0.2s;
+    width: 100%;
 }
 
 .course-card:hover {
@@ -154,4 +142,22 @@
     height: 400px;
     font-size: 18px;
     color: #ff6b6b;
+}
+
+@media (max-width: 1200px) {
+    .courses-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .courses-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 480px) {
+    .courses-grid {
+        grid-template-columns: 1fr;
+    }
 }

@@ -1,9 +1,11 @@
 from datetime import datetime, timezone
 
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy import ForeignKey, String, DateTime
+from sqlalchemy import ForeignKey, DateTime, Integer
+from sqlalchemy import Enum as SqlEnum
 
 from ..database import Base
+from src.domain.enum.action_type import ActionType
 
 
 class Action(Base):
@@ -21,16 +23,26 @@ class Action(Base):
         nullable=False,
     )
 
-    action_type: Mapped[str] = mapped_column(
+    action_type: Mapped[ActionType] = mapped_column(
         "type",
-        String(32),
+        SqlEnum(
+            ActionType,
+            name="actiontype",
+            values_callable=lambda enum: [member.name for member in enum],
+        ),
         nullable=False,
     )
 
-    timestamp: Mapped[datetime] = mapped_column(
-        DateTime,
-        default=datetime.now(timezone.utc),
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc),
         nullable=False,
+    )
+
+    value: Mapped[int | None] = mapped_column(
+        Integer,
+        default=None,
+        nullable=True,
     )
 
     user: Mapped["User"] = relationship(

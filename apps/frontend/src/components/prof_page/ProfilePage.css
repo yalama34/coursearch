@@ -169,7 +169,8 @@
 .favorites-grid {
     display: grid;
     grid-template-columns: repeat(5, 1fr);
-    gap: 16px;
+    gap: 20px;
+    width: 100%;
 }
 
 .save-button {
@@ -187,4 +188,49 @@
 
 .save-button:hover {
     background-color: #a078d8;
+}
+
+@media (max-width: 768px) {
+    .main-content { padding: 16px; }
+    .page-title { font-size: 28px; text-align: center; }
+
+    .course-top-section { flex-direction: column; align-items: center; text-align: center; }
+    .course-left-content { flex-direction: column; align-items: center; }
+    .course-author { align-self: center; margin-top: 16px; }
+
+    .profile-header { flex-direction: column; align-items: center; text-align: center; }
+    .interests-container { min-width: 100%; }
+
+    .search-input { width: 120px; }
+}
+
+@media (max-width: 768px) {
+    .interests-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    .edit-interests-btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+@media (max-width: 1200px) {
+    .favorites-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .favorites-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 480px) {
+    .favorites-grid {
+        grid-template-columns: 1fr;
+    }
 }

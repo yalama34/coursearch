@@ -1,4 +1,4 @@
-from src.integrations.ml_service.schemas import RecommendationResponse
+from src.integrations.ml_service.schemas import ExplanationsResponse, RecommendationResponse
 from src.dependencies.ml_client import MLClientDep
 
 
@@ -26,3 +26,10 @@ class RecommendationService:
             )
 
         return await self.ml_client.get_recommendations(user_id, limit)
+
+    async def get_explanations(
+            self,
+            user_id: int,
+            course_ids: list[int],
+    ) -> ExplanationsResponse:
+        return await self.ml_client.get_explanations(user_id, course_ids)

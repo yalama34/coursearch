@@ -1,49 +1,63 @@
-import { render, screen } from '@testing-library/react'
-import { BrowserRouter } from 'react-router-dom'
-import { ProfilePage } from '../components/prof_page/ProfilePage'
-import { useProfile } from '../hooks/profilehook'
+import { render, screen } from '@testing-library/react';
+import { BrowserRouter } from 'react-router-dom';
+import { ProfilePage } from '../components/prof_page/ProfilePage';
+import { useProfile } from '../hooks/profilehook';
+import { useAuth } from '../hooks/useAuth';
 
-vi.mock('../hooks/profilehook')
-const mockedUseProfile = vi.mocked(useProfile)
+vi.mock('../hooks/profilehook');
+vi.mock('../hooks/useAuth');
+
+const mockedUseProfile = vi.mocked(useProfile);
+const mockedUseAuth = vi.mocked(useAuth);
 
 describe('ProfilePage', () => {
     beforeEach(() => {
-        vi.clearAllMocks()
-    })
+        vi.clearAllMocks();
+        mockedUseAuth.mockReturnValue({
+            user: { user_id: 1, nickname: 'test' },
+            token: 'token',
+            isAuthenticated: true,
+            isLoading: false,
+            error: null,
+            login: vi.fn(),
+            register: vi.fn(),
+            logout: vi.fn(),
+        });
+    });
 
     it('shows loading state', () => {
         mockedUseProfile.mockReturnValue({
             profile: null,
-            recommendations: [],
             isLoading: true,
             error: null,
-        } as any)
+            refetch: vi.fn(),
+        } as any);
 
         render(
             <BrowserRouter>
                 <ProfilePage />
-            </BrowserRouter>
-        )
+            </BrowserRouter>,
+        );
 
-        expect(screen.getByText('Загрузка...')).toBeInTheDocument()
-    })
+        expect(screen.getByText('Загрузка...')).toBeInTheDocument();
+    });
 
     it('shows error state', () => {
         mockedUseProfile.mockReturnValue({
             profile: null,
-            recommendations: [],
             isLoading: false,
             error: 'Failed to load',
-        } as any)
+            refetch: vi.fn(),
+        } as any);
 
         render(
             <BrowserRouter>
                 <ProfilePage />
-            </BrowserRouter>
-        )
+            </BrowserRouter>,
+        );
 
-        expect(screen.getByText('Failed to load')).toBeInTheDocument()
-    })
+        expect(screen.getByText('Failed to load')).toBeInTheDocument();
+    });
 
     it('renders profile data', () => {
         mockedUseProfile.mockReturnValue({
@@ -56,22 +70,22 @@ describe('ProfilePage', () => {
                 ],
                 favoriteCourses: [],
             },
-            recommendations: [],
             isLoading: false,
             error: null,
-        } as any)
+            refetch: vi.fn(),
+        } as any);
 
         render(
             <BrowserRouter>
                 <ProfilePage />
-            </BrowserRouter>
-        )
+            </BrowserRouter>,
+        );
 
-        expect(screen.getByText('Test User')).toBeInTheDocument()
-        expect(screen.getByText('User ID: 123')).toBeInTheDocument()
-        expect(screen.getByText('React')).toBeInTheDocument()
-        expect(screen.getByText('TypeScript')).toBeInTheDocument()
-    })
+        expect(screen.getByText('Test User')).toBeInTheDocument();
+        expect(screen.getByText('User ID: 123')).toBeInTheDocument();
+        expect(screen.getByText('React')).toBeInTheDocument();
+        expect(screen.getByText('TypeScript')).toBeInTheDocument();
+    });
 
     it('renders favorite courses section', () => {
         mockedUseProfile.mockReturnValue({
@@ -80,21 +94,28 @@ describe('ProfilePage', () => {
                 name: 'User',
                 interests: [],
                 favoriteCourses: [
-                    { id: '1', title: 'Favorite Course', description: 'Desc', tags: [] },
+                    {
+                        id: '1',
+                        title: 'Favorite Course',
+                        description: 'Desc',
+                        tags: [],
+                        author: '',
+                        imageUrl: '',
+                    },
                 ],
             },
-            recommendations: [],
             isLoading: false,
             error: null,
-        } as any)
+            refetch: vi.fn(),
+        } as any);
 
         render(
             <BrowserRouter>
                 <ProfilePage />
-            </BrowserRouter>
-        )
+            </BrowserRouter>,
+        );
 
-        expect(screen.getByText('Favorite Courses')).toBeInTheDocument()
-        expect(screen.getByText('Favorite Course')).toBeInTheDocument()
-    })
-})
+        expect(screen.getByText('Favorite Courses')).toBeInTheDocument();
+        expect(screen.getByText('Favorite Course')).toBeInTheDocument();
+    });
+});

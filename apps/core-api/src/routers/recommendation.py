@@ -15,6 +15,7 @@ router = APIRouter(tags=["recommendations"], prefix="/recommendations")
 async def get_recommendations(
         user_id: int,
         limit: int = 10,
+        force: bool = False,
         ml_client: MLClientDep = None,
 ):
     """
@@ -23,6 +24,7 @@ async def get_recommendations(
     Args:
         user_id: int - User ID for whom to get recommendations
         limit: int - Number of recommendations to return (default: 10)
+        force: bool - Bypass cache and recompute recommendations (default: False)
 
     Raises:
         HTTPException: 503 if ML service unavailable
@@ -30,7 +32,7 @@ async def get_recommendations(
     service = RecommendationService(ml_client)
 
     try:
-        return await service.get_recommendations(user_id, limit)
+        return await service.get_recommendations(user_id, limit, force=force)
 
     except Exception:
         raise HTTPException(
@@ -47,6 +49,7 @@ async def get_recommendations(
 async def get_recommendations_explanations(
         user_id: int,
         course_ids: str,
+        force: bool = False,
         ml_client: MLClientDep = None,
 ):
     try:
@@ -66,7 +69,7 @@ async def get_recommendations_explanations(
     service = RecommendationService(ml_client)
 
     try:
-        return await service.get_explanations(user_id, parsed_ids)
+        return await service.get_explanations(user_id, parsed_ids, force=force)
 
     except HTTPException:
         raise

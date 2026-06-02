@@ -9,6 +9,7 @@ from src.db.models.user import User
 from src.db.models.course import Course
 from src.schemas.recommendations import ExplanationItem, ExplanationsResponse
 from src.integrations.llm.services.explanation import LLMExplanation
+from src.utils.user_profile import build_user_profile_text
 
 
 logger = logging.getLogger(__name__)
@@ -22,6 +23,7 @@ async def get_explanations(
     course_ids: List[int],
     session: AsyncSession,
     redis: Any | None = None,
+    force: bool = False,
 ) -> ExplanationsResponse:
     """
     Get explanations for a list of course IDs for a specific user.
@@ -32,9 +34,18 @@ async def get_explanations(
         return ExplanationsResponse(user_id=user_id, explanations=[])
 
     cached_explanations = {}
-    missing_ids = []
+    missing_ids = list(course_ids)
 
-    if redis is not None:
+    if force and redis is not None:
+        try:
+            keys = [_explanation_cache_key(user_id, cid) for cid in course_ids]
+            if keys:
+                await redis.delete(*keys)
+        except Exception as e:
+            logger.error(f"Error clearing explanation cache: {e}")
+
+    if redis is not None and not force:
+        missing_ids = []
         try:
             keys = [_explanation_cache_key(user_id, cid) for cid in course_ids]
             cached_vals = await redis.mget(keys)
@@ -46,8 +57,6 @@ async def get_explanations(
         except Exception as e:
             logger.error(f"Error reading from Redis cache: {e}")
             missing_ids = list(course_ids)
-    else:
-        missing_ids = list(course_ids)
 
     if missing_ids:
         try:
@@ -58,8 +67,10 @@ async def get_explanations(
             if not user:
                 logger.warning(f"User {user_id} not found for explanation generation.")
                 user_tags_list = []
+                user_description = None
             else:
                 user_tags_list = [tag.name for tag in user.tags]
+                user_description = user.description
 
             courses_query = (
                 select(Course)
@@ -69,7 +80,8 @@ async def get_explanations(
             courses_result = await session.execute(courses_query)
             courses_db = courses_result.scalars().all()
 
-            if not user_tags_list or not courses_db:
+            has_profile = bool(build_user_profile_text(user_tags_list, user_description))
+            if not has_profile or not courses_db:
                 for cid in missing_ids:
                     cached_explanations[cid] = "Подходит по вашим интересам (на основе тегов)"
             else:
@@ -84,7 +96,8 @@ async def get_explanations(
                 llm_explainer = LLMExplanation()
                 generated_explanations = await llm_explainer.get_explanations(
                     user_tags=user_tags_list,
-                    courses_list=courses_for_llm
+                    courses_list=courses_for_llm,
+                    user_description=user_description,
                 )
 
                 explanations_dict = {

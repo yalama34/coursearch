@@ -30,6 +30,7 @@ class ProfileService:
         return ProfileResponse(
             user_id=user.user_id,
             nickname=user.nickname,
+            description=user.description,
             tags=tags,
             liked_courses=courses,
         )

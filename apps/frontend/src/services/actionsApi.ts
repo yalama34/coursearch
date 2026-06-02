@@ -2,7 +2,7 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
 export interface ActionPayload {
     course_id: string | number;
-    action_type: 'view' | 'like';
+    action_type: 'view' | 'like' | 'click_link';
 }
 
 export interface EngagementPayload {

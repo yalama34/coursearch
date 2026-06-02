@@ -1,6 +1,7 @@
 import React, { useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { Course } from '../../types/types';
+import { actionsApi } from '../../services/actionsApi';
 import './CourseCard.css';
 
 interface CourseCardProps {
@@ -35,8 +36,19 @@ export const CourseCard: React.FC<CourseCardProps> = ({
 
     const title = course.title?.trim() || `Курс #${course.id}`;
 
+    const handleCardClick = () => {
+        actionsApi
+            .sendAction({ course_id: course.id, action_type: 'view' })
+            .catch((error) => console.error('Failed to send view action', error));
+    };
+
     return (
-        <Link to={`/course/${course.id}`} className="course-card-link">
+        <Link
+            to={`/course/${course.id}`}
+            state={{ fromCard: true }}
+            className="course-card-link"
+            onClick={handleCardClick}
+        >
             <div
                 ref={cardRef}
                 className="course-card"

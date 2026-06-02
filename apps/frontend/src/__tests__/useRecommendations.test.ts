@@ -58,6 +58,24 @@ describe('useRecommendations', () => {
         expect(result.current.recommendations[0].recommendationExplanation?.confidence).toBe(0.9);
     });
 
+    it('refresh calls getRecommendations with force=true', async () => {
+        mockedGetRecommendations.mockResolvedValue({ recommendations: mockCourses });
+        mockedGetExplanations.mockResolvedValue({ user_id: 1, explanations: [] });
+
+        const { result } = renderHook(() => useRecommendations('1'));
+
+        await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+        mockedGetRecommendations.mockClear();
+        mockedGetRecommendations.mockResolvedValueOnce({ recommendations: mockCourses });
+
+        result.current.refresh();
+
+        await waitFor(() => expect(mockedGetRecommendations).toHaveBeenCalledWith('1', 10, true));
+        await waitFor(() => expect(mockedGetExplanations).toHaveBeenCalledWith('1', [1, 2], true));
+        await waitFor(() => expect(result.current.isRefreshing).toBe(false));
+    });
+
     it('keeps recommendations when explanations request fails', async () => {
         mockedGetRecommendations.mockResolvedValueOnce({ recommendations: mockCourses });
         mockedGetExplanations.mockRejectedValueOnce(new Error('Explanations failed'));

@@ -14,12 +14,6 @@ export const useCourseTracking = (
         setIsLiked(initialLiked);
     }, [initialLiked, courseId]);
 
-    const sendView = useCallback(async () => {
-        if (!courseId) return;
-        try { await actionsApi.sendAction({ course_id: courseId, action_type: 'view' }); }
-        catch (e) { console.error('View error', e); }
-    }, [courseId]);
-
     const handleLike = useCallback(async () => {
         if (!courseId || isLiked || isLiking) return;
 
@@ -36,8 +30,6 @@ export const useCourseTracking = (
 
     useEffect(() => {
         if (!courseId) return;
-
-        sendView();
 
         const startTracking = () => {
             intervalRef.current = window.setInterval(() => {
@@ -70,7 +62,7 @@ export const useCourseTracking = (
                 actionsApi.sendEngagement({ course_id: courseId, value: finalDelta }).catch(console.error);
             }
         };
-    }, [courseId, sendView]);
+    }, [courseId]);
 
     return { isLiked, isLiking, handleLike };
 };

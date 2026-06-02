@@ -11,9 +11,11 @@ const USE_MOCK = import.meta.env.VITE_USE_MOCK === 'true';
 interface UseRecommendationsResult {
     recommendations: Course[];
     isLoading: boolean;
+    isRefreshing: boolean;
     isLoadingExplanations: boolean;
     error: string | null;
     refetch: () => void;
+    refresh: () => void;
 }
 
 const mergeExplanations = (courses: Course[], explanations: ExplanationItem[]): Course[] => {
@@ -41,10 +43,15 @@ export const useRecommendations = (
 ): UseRecommendationsResult => {
     const [recommendations, setRecommendations] = useState<Course[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [isRefreshing, setIsRefreshing] = useState(false);
     const [isLoadingExplanations, setIsLoadingExplanations] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    const fetchExplanations = useCallback(async (uid: string | number, courses: Course[]) => {
+    const fetchExplanations = useCallback(async (
+        uid: string | number,
+        courses: Course[],
+        force = false,
+    ) => {
         const courseIds = courses.map((course) => course.id);
         if (courseIds.length === 0) {
             return;
@@ -52,7 +59,7 @@ export const useRecommendations = (
 
         setIsLoadingExplanations(true);
         try {
-            const data = await getRecommendationExplanations(uid, courseIds);
+            const data = await getRecommendationExplanations(uid, courseIds, force);
             setRecommendations((prev) => mergeExplanations(prev, data.explanations));
         } catch (err) {
             console.error('Failed to load recommendation explanations:', err);
@@ -61,13 +68,17 @@ export const useRecommendations = (
         }
     }, []);
 
-    const fetchData = useCallback(async () => {
+    const fetchData = useCallback(async (force = false) => {
         if (!userId) {
             setIsLoading(false);
             return;
         }
 
-        setIsLoading(true);
+        if (force) {
+            setIsRefreshing(true);
+        } else {
+            setIsLoading(true);
+        }
         setError(null);
         setRecommendations([]);
 
@@ -78,27 +89,36 @@ export const useRecommendations = (
                 return;
             }
 
-            const recsData = await getRecommendations(userId, limit);
+            const recsData = await getRecommendations(userId, limit, force);
             setRecommendations(recsData.recommendations);
-            setIsLoading(false);
+            if (!force) {
+                setIsLoading(false);
+            }
 
-            void fetchExplanations(userId, recsData.recommendations);
+            void fetchExplanations(userId, recsData.recommendations, force);
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Failed to load recommendations');
         } finally {
             setIsLoading(false);
+            setIsRefreshing(false);
         }
     }, [userId, limit, fetchExplanations]);
 
     useEffect(() => {
-        void fetchData();
+        void fetchData(false);
     }, [fetchData]);
 
     return {
         recommendations,
         isLoading,
+        isRefreshing,
         isLoadingExplanations,
         error,
-        refetch: fetchData,
+        refetch: () => {
+            void fetchData(false);
+        },
+        refresh: () => {
+            void fetchData(true);
+        },
     };
 };

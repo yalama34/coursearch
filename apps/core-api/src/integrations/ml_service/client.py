@@ -84,12 +84,14 @@ class MLServiceClient:
             self,
             user_id: int,
             course_ids: list[int],
+            force: bool = False,
     ) -> ExplanationsResponse:
         data = await self.get(
             path="/recommendations/explanations",
             params={
                 "user_id": user_id,
                 "course_ids": ",".join(str(cid) for cid in course_ids),
+                "force": force,
             },
         )
         return ExplanationsResponse.model_validate(data)

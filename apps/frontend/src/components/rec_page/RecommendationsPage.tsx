@@ -14,7 +14,14 @@ interface RecommendationsPageProps {
 export const RecommendationsPage: React.FC<RecommendationsPageProps> = ({ userId }) => {
     const { user, isLoading: authLoading } = useAuth();
     const effectiveUserId = userId ?? user?.user_id ?? '';
-    const { recommendations, isLoading, isLoadingExplanations, error } = useRecommendations(effectiveUserId);
+    const {
+        recommendations,
+        isLoading,
+        isRefreshing,
+        isLoadingExplanations,
+        error,
+        refresh,
+    } = useRecommendations(effectiveUserId);
 
     if (authLoading || isLoading) {
         return (
@@ -40,6 +47,14 @@ export const RecommendationsPage: React.FC<RecommendationsPageProps> = ({ userId
     return (
         <div className="recommendations-page">
             <h1 className="page-title">Рекомендованные курсы</h1>
+            <button
+                type="button"
+                className="refresh-recommendations-btn"
+                onClick={refresh}
+                disabled={isRefreshing}
+            >
+                {isRefreshing ? 'Обновление...' : 'Обновить рекомендации'}
+            </button>
             <div className="courses-grid">
                 {recommendations.map((course, index) => (
                     <CourseCard

@@ -29,9 +29,11 @@ describe('RecommendationsPage', () => {
         mockedUseRecommendations.mockReturnValue({
             recommendations: [],
             isLoading: true,
+            isRefreshing: false,
             isLoadingExplanations: false,
             error: null,
             refetch: vi.fn(),
+            refresh: vi.fn(),
         });
 
         const { container } = render(
@@ -48,9 +50,11 @@ describe('RecommendationsPage', () => {
         mockedUseRecommendations.mockReturnValue({
             recommendations: [],
             isLoading: false,
+            isRefreshing: false,
             isLoadingExplanations: false,
             error: 'Failed to load',
             refetch: vi.fn(),
+            refresh: vi.fn(),
         });
 
         render(
@@ -83,9 +87,11 @@ describe('RecommendationsPage', () => {
                 },
             ],
             isLoading: false,
+            isRefreshing: false,
             isLoadingExplanations: false,
             error: null,
             refetch: vi.fn(),
+            refresh: vi.fn(),
         });
 
         render(
@@ -97,15 +103,40 @@ describe('RecommendationsPage', () => {
         expect(screen.getByText('Course 1')).toBeInTheDocument();
         expect(screen.getByText('Course 2')).toBeInTheDocument();
         expect(screen.getByText('Tag1')).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: 'Обновить рекомендации' })).toBeInTheDocument();
+    });
+
+    it('calls refresh when update button is clicked', () => {
+        const refresh = vi.fn();
+        mockedUseRecommendations.mockReturnValue({
+            recommendations: [],
+            isLoading: false,
+            isRefreshing: false,
+            isLoadingExplanations: false,
+            error: null,
+            refetch: vi.fn(),
+            refresh,
+        });
+
+        render(
+            <BrowserRouter>
+                <RecommendationsPage />
+            </BrowserRouter>,
+        );
+
+        screen.getByRole('button', { name: 'Обновить рекомендации' }).click();
+        expect(refresh).toHaveBeenCalledTimes(1);
     });
 
     it('has page title', () => {
         mockedUseRecommendations.mockReturnValue({
             recommendations: [],
             isLoading: false,
+            isRefreshing: false,
             isLoadingExplanations: false,
             error: null,
             refetch: vi.fn(),
+            refresh: vi.fn(),
         });
 
         render(

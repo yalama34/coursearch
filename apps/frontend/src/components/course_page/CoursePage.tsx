@@ -1,13 +1,15 @@
-import React from 'react';
-import { useParams } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { useParams, useLocation } from 'react-router-dom';
 import { useCourse } from '../../hooks/coursehook';
 import { useAuth } from '../../hooks/useAuth';
 import { useProfile } from '../../hooks/profilehook';
 import './CoursePage.css';
 import { useCourseTracking } from '../../hooks/courseTrackHook.ts';
+import { actionsApi } from '../../services/actionsApi';
 
 export const CoursePage: React.FC = () => {
     const { id } = useParams<{ id: string }>();
+    const location = useLocation();
     const { course, isLoading, error } = useCourse(id);
     const { user } = useAuth();
     const { profile } = useProfile(user?.user_id ?? '');
@@ -15,6 +17,25 @@ export const CoursePage: React.FC = () => {
         (c) => String(c.id) === id,
     ) ?? false;
     const { isLiked, isLiking, handleLike } = useCourseTracking(id, initialLiked);
+
+    useEffect(() => {
+        if (!id) return;
+
+        const fromCard = (location.state as { fromCard?: boolean } | null)?.fromCard;
+        if (fromCard) return;
+
+        actionsApi
+            .sendAction({ course_id: id, action_type: 'view' })
+            .catch((err) => console.error('Failed to send view action', err));
+    }, [id, location.state]);
+
+    const handleExternalLinkClick = () => {
+        if (!id) return;
+
+        actionsApi
+            .sendAction({ course_id: id, action_type: 'click_link' })
+            .catch((err) => console.error('Failed to send click_link action', err));
+    };
 
     if (isLoading) return <div className="course-page">Loading...</div>;
     if (error) return <div className="course-page" style={{color: 'red'}}>{error}</div>;
@@ -50,6 +71,18 @@ export const CoursePage: React.FC = () => {
             </div>
 
             <p className="course-description-course-page">{course.description}</p>
+
+            {course.link && (
+                <a
+                    href={course.link}
+                    className="course-external-link"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={handleExternalLinkClick}
+                >
+                    Перейти на курс
+                </a>
+            )}
 
             <div className="tags-section">
                 <div className="tags-label">Теги Курса</div>

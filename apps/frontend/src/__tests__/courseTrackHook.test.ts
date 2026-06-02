@@ -1,4 +1,4 @@
-import { renderHook, act, waitFor } from '@testing-library/react';
+import { renderHook, act } from '@testing-library/react';
 import { useCourseTracking } from '../hooks/courseTrackHook';
 import { actionsApi } from '../services/actionsApi';
 
@@ -56,16 +56,5 @@ describe('useCourseTracking', () => {
         expect(mockedSendAction).not.toHaveBeenCalledWith(
             expect.objectContaining({ action_type: 'like' }),
         );
-    });
-
-    it('sends view on mount', async () => {
-        renderHook(() => useCourseTracking('7', false));
-
-        await waitFor(() => {
-            expect(mockedSendAction).toHaveBeenCalledWith({
-                course_id: '7',
-                action_type: 'view',
-            });
-        });
     });
 });

@@ -17,6 +17,7 @@ export interface Course {
     tags: Tag[];
     recommendationExplanation?: RecommendationExplanation;
     imageUrl: string;
+    link?: string;
 }
 
 export interface ProfileResponse {

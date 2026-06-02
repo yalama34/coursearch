@@ -72,4 +72,53 @@ describe('CoursePage', () => {
         expect(screen.getByText('React')).toBeInTheDocument()
         expect(screen.getByText('TypeScript')).toBeInTheDocument()
     })
+
+    it('renders external link when course has link', () => {
+        mockedUseCourse.mockReturnValue({
+            course: {
+                id: '1',
+                title: 'Test Course',
+                description: 'Test Description',
+                author: 'Test Author',
+                imageUrl: '',
+                link: 'https://example.com/course',
+                tags: [],
+            },
+            isLoading: false,
+            error: null,
+        })
+
+        render(
+            <BrowserRouter>
+                <CoursePage />
+            </BrowserRouter>
+        )
+
+        const link = screen.getByRole('link', { name: 'Перейти на курс' })
+        expect(link).toHaveAttribute('href', 'https://example.com/course')
+        expect(link).toHaveAttribute('target', '_blank')
+    })
+
+    it('does not render external link when course has no link', () => {
+        mockedUseCourse.mockReturnValue({
+            course: {
+                id: '1',
+                title: 'Test Course',
+                description: 'Test Description',
+                author: 'Test Author',
+                imageUrl: '',
+                tags: [],
+            },
+            isLoading: false,
+            error: null,
+        })
+
+        render(
+            <BrowserRouter>
+                <CoursePage />
+            </BrowserRouter>
+        )
+
+        expect(screen.queryByRole('link', { name: 'Перейти на курс' })).not.toBeInTheDocument()
+    })
 })

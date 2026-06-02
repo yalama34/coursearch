@@ -7,6 +7,7 @@ from sqlalchemy.orm import selectinload
 from numpy.typing import NDArray
 import numpy as np
 
+from src.utils.user_profile import build_user_profile_text
 from src.schemas.recommendations import RecommendationItem, RecommendationExplanation
 from src.domain.recommendation.pipeline_order import StageName
 from src.engine.chroma_client import ChromaClient
@@ -47,12 +48,16 @@ class ContentBasedStage:
         result = await self.__db_session.execute(query)
         user = result.scalar_one_or_none()
 
-        if not user or not user.tags:
-            logger.info("No tags found for user %s", user_id)
+        if not user:
+            logger.info("User %s not found", user_id)
             return candidates
 
         user_tags_list = [tag.name for tag in user.tags]
-        user_text = " ".join(user_tags_list)
+        user_text = build_user_profile_text(user_tags_list, user.description)
+        if not user_text:
+            logger.info("No tags or description found for user %s", user_id)
+            return candidates
+
         user_embeddings: NDArray[np.float32] = self.__embedding_engine.generate(user_text)
 
         filters = None

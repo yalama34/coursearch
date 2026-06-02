@@ -7,7 +7,30 @@
     font-size: 48px;
     font-weight: bold;
     color: var(--color-text-primary);
+    margin-bottom: 16px;
+}
+
+.refresh-recommendations-btn {
+    display: inline-block;
     margin-bottom: 32px;
+    padding: 10px 18px;
+    border: none;
+    border-radius: 8px;
+    background-color: var(--color-text-primary, #fff5ba);
+    color: #333;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.refresh-recommendations-btn:hover:not(:disabled) {
+    transform: scale(1.03);
+}
+
+.refresh-recommendations-btn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
 }
 
 .courses-grid {

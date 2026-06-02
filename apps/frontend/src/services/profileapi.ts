@@ -19,6 +19,7 @@ const mapProfile = (data: any): ProfileData => {
     return {
         userId: (data.user_id ?? data.userId ?? '').toString(),
         name: data.nickname || data.name || 'User',
+        description: data.description ?? undefined,
         interests: data.tags ? data.tags.map((tag: string, i: number) => ({ id: i, label: tag })) : (data.interests || []),
         favoriteCourses: favoriteCourses,
     };
@@ -46,8 +47,13 @@ export const updateInterests = async (interests: string[], token: string): Promi
     if (!res.ok) throw new Error('Failed to update interests');
 };
 
-export const getRecommendations = async (userId: string | number, limit: number = 10): Promise<RecommendationsData> => {
-    const res = await fetch(`${API_BASE_URL}/recommendations?user_id=${userId}&limit=${limit}`);
+export const getRecommendations = async (
+    userId: string | number,
+    limit: number = 10,
+    force: boolean = false,
+): Promise<RecommendationsData> => {
+    const forceParam = force ? '&force=true' : '';
+    const res = await fetch(`${API_BASE_URL}/recommendations?user_id=${userId}&limit=${limit}${forceParam}`);
     if (!res.ok) {
         if (res.status === 503) throw new Error('ML service unavailable');
         throw new Error(`Recommendations fetch failed: ${res.status}`);
@@ -99,14 +105,16 @@ export const getRecommendations = async (userId: string | number, limit: number 
 export const getRecommendationExplanations = async (
     userId: string | number,
     courseIds: Array<string | number>,
+    force: boolean = false,
 ): Promise<ExplanationsResponse> => {
     if (courseIds.length === 0) {
         return { user_id: Number(userId), explanations: [] };
     }
 
     const ids = courseIds.join(',');
+    const forceParam = force ? '&force=true' : '';
     const res = await fetch(
-        `${API_BASE_URL}/recommendations/explanations?user_id=${userId}&course_ids=${ids}`,
+        `${API_BASE_URL}/recommendations/explanations?user_id=${userId}&course_ids=${ids}${forceParam}`,
     );
     if (!res.ok) {
         if (res.status === 503) throw new Error('ML service unavailable');

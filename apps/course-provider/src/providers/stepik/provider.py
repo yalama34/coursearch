@@ -22,7 +22,17 @@ class StepikProvider:
         has_next = True
 
         while has_next:
-            data = await self.client.send_request("GET", "/api/courses", params={"page": page, "tag": 1})
+            data = await self.client.send_request(
+                "GET",
+                "/api/courses",
+                params={
+                    "page": page,
+                    "tag": 1,
+                    "is_public": "true",
+                    "is_popular": "true",
+                    "language": "ru",
+                }
+            )
             raw_courses = data.get("courses", [])
 
             tag_ids_from_request = set()

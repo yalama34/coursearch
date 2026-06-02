@@ -1,10 +1,18 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { actionsApi } from '../services/actionsApi';
 
-export const useCourseTracking = (courseId: string | undefined) => {
-    const [isLiked, setIsLiked] = useState(false);
+export const useCourseTracking = (
+    courseId: string | undefined,
+    initialLiked = false,
+) => {
+    const [isLiked, setIsLiked] = useState(initialLiked);
+    const [isLiking, setIsLiking] = useState(false);
     const lastSentTime = useRef(Date.now());
     const intervalRef = useRef<number | null>(null);
+
+    useEffect(() => {
+        setIsLiked(initialLiked);
+    }, [initialLiked, courseId]);
 
     const sendView = useCallback(async () => {
         if (!courseId) return;
@@ -13,12 +21,18 @@ export const useCourseTracking = (courseId: string | undefined) => {
     }, [courseId]);
 
     const handleLike = useCallback(async () => {
-        if (!courseId) return;
+        if (!courseId || isLiked || isLiking) return;
+
+        setIsLiking(true);
         try {
             await actionsApi.sendAction({ course_id: courseId, action_type: 'like' });
-            setIsLiked(prev => !prev);
-        } catch (e) { console.error('Like error', e); }
-    }, [courseId]);
+            setIsLiked(true);
+        } catch (e) {
+            console.error('Like error', e);
+        } finally {
+            setIsLiking(false);
+        }
+    }, [courseId, isLiked, isLiking]);
 
     useEffect(() => {
         if (!courseId) return;
@@ -58,5 +72,5 @@ export const useCourseTracking = (courseId: string | undefined) => {
         };
     }, [courseId, sendView]);
 
-    return { isLiked, handleLike };
+    return { isLiked, isLiking, handleLike };
 };

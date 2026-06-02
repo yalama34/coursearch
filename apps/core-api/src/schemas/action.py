@@ -7,3 +7,7 @@ class CreateActionRequest(BaseModel):
     course_id: int
     action_type: ActionType
     value: int | None = None
+
+
+class CreateActionResponse(BaseModel):
+    status: str

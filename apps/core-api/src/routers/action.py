@@ -3,7 +3,7 @@ from fastapi import APIRouter
 from src.dependencies.auth import CurrentUserDep
 from src.dependencies.db import SessionDep
 
-from src.schemas.action import CreateActionRequest
+from src.schemas.action import CreateActionRequest, CreateActionResponse
 from src.services.action import ActionService
 
 
@@ -16,18 +16,19 @@ router = APIRouter(
 @router.post(
     "",
     summary="Create user action",
+    response_model=CreateActionResponse,
 )
 async def create_action(
     request: CreateActionRequest,
     current_user: CurrentUserDep,
     session: SessionDep,
-) -> dict[str, str]:
+) -> CreateActionResponse:
     """Create user action."""
     action_service = ActionService(session)
 
-    await action_service.create_action(
+    status = await action_service.create_action(
         current_user.user_id,
         request,
     )
 
-    return {"status": "ok"}
+    return CreateActionResponse(status=status)

@@ -1,13 +1,20 @@
 import React from 'react';
 import { useParams } from 'react-router-dom';
 import { useCourse } from '../../hooks/coursehook';
+import { useAuth } from '../../hooks/useAuth';
+import { useProfile } from '../../hooks/profilehook';
 import './CoursePage.css';
-import {useCourseTracking} from "../../hooks/courseTrackHook.ts";
+import { useCourseTracking } from '../../hooks/courseTrackHook.ts';
 
 export const CoursePage: React.FC = () => {
     const { id } = useParams<{ id: string }>();
     const { course, isLoading, error } = useCourse(id);
-    const { isLiked, handleLike } = useCourseTracking(id);
+    const { user } = useAuth();
+    const { profile } = useProfile(user?.user_id ?? '');
+    const initialLiked = profile?.favoriteCourses.some(
+        (c) => String(c.id) === id,
+    ) ?? false;
+    const { isLiked, isLiking, handleLike } = useCourseTracking(id, initialLiked);
 
     if (isLoading) return <div className="course-page">Loading...</div>;
     if (error) return <div className="course-page" style={{color: 'red'}}>{error}</div>;
@@ -31,9 +38,10 @@ export const CoursePage: React.FC = () => {
                         <button
                             className={`like-btn ${isLiked ? 'liked' : ''}`}
                             onClick={handleLike}
+                            disabled={isLiked || isLiking}
                             aria-label="Like course"
                         >
-                            {isLiked ? '❤️ Liked' : '🤍 Like'}
+                            {isLiking ? '...' : isLiked ? '❤️ Liked' : '🤍 Like'}
                         </button>
                     </div>
                 </div>

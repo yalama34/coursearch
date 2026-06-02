@@ -21,8 +21,12 @@ const getAuthHeaders = (): Record<string, string> => {
     return headers;
 };
 
+export interface ActionResponse {
+    status: 'ok' | 'liked' | 'already_liked';
+}
+
 export const actionsApi = {
-    sendAction: async (payload: ActionPayload) => {
+    sendAction: async (payload: ActionPayload): Promise<ActionResponse | void> => {
         if (import.meta.env.VITE_USE_MOCK === 'true') {
             console.log('[MOCK] Action:', payload);
             return;
@@ -34,6 +38,7 @@ export const actionsApi = {
             body: JSON.stringify(payload),
         });
         if (!res.ok) throw new Error('Failed to send action');
+        return res.json();
     },
 
     sendEngagement: async (payload: EngagementPayload) => {

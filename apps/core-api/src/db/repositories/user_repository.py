@@ -143,6 +143,7 @@ class UserRepository(BaseRepository):
                 Action.user_id == user_id,
                 Action.action_type == ActionType.LIKE,
             )
+            .distinct()
         )
 
         result = await self.session.execute(stmt)

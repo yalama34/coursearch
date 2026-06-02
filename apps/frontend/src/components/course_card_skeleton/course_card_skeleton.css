@@ -2,7 +2,7 @@
     background-color: var(--color-card-bg);
     border-radius: 12px;
     padding: 20px;
-    height: 300px;
+    height: 400px;
     display: flex;
     flex-direction: column;
     justify-content: space-between;

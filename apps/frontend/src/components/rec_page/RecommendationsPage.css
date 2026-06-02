@@ -10,11 +10,16 @@
     margin-bottom: 32px;
 }
 
-.courses-grid{
+.courses-grid {
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
+    grid-template-columns: repeat(5, minmax(0, 1fr));
     gap: 20px;
     width: 100%;
+    align-items: stretch;
+}
+
+.courses-grid > * {
+    min-width: 0;
 }
 
 .course-recommendation-reason {
@@ -64,18 +69,18 @@
 
 @media (max-width: 1200px) {
     .courses-grid {
-        grid-template-columns: repeat(3, 1fr);
+        grid-template-columns: repeat(3, minmax(0, 1fr));
     }
 }
 
 @media (max-width: 768px) {
     .courses-grid {
-        grid-template-columns: repeat(2, 1fr);
+        grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 }
 
 @media (max-width: 480px) {
     .courses-grid {
-        grid-template-columns: 1fr;
+        grid-template-columns: minmax(0, 1fr);
     }
 }

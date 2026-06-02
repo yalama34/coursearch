@@ -1,13 +1,13 @@
 import { render, screen } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import { RecommendationsPage } from '../components/rec_page/RecommendationsPage';
-import { useProfile } from '../hooks/profilehook';
+import { useRecommendations } from '../hooks/useRecommendations';
 import { useAuth } from '../hooks/useAuth';
 
-vi.mock('../hooks/profilehook');
+vi.mock('../hooks/useRecommendations');
 vi.mock('../hooks/useAuth');
 
-const mockedUseProfile = vi.mocked(useProfile);
+const mockedUseRecommendations = vi.mocked(useRecommendations);
 const mockedUseAuth = vi.mocked(useAuth);
 
 describe('RecommendationsPage', () => {
@@ -26,13 +26,13 @@ describe('RecommendationsPage', () => {
     });
 
     it('shows skeleton grid while loading', () => {
-        mockedUseProfile.mockReturnValue({
+        mockedUseRecommendations.mockReturnValue({
             recommendations: [],
             isLoading: true,
             isLoadingExplanations: false,
             error: null,
             refetch: vi.fn(),
-        } as any);
+        });
 
         const { container } = render(
             <BrowserRouter>
@@ -51,7 +51,7 @@ describe('RecommendationsPage', () => {
             isLoadingExplanations: false,
             error: 'Failed to load',
             refetch: vi.fn(),
-        } as any);
+        });
 
         render(
             <BrowserRouter>
@@ -86,7 +86,7 @@ describe('RecommendationsPage', () => {
             isLoadingExplanations: false,
             error: null,
             refetch: vi.fn(),
-        } as any);
+        });
 
         render(
             <BrowserRouter>
@@ -106,7 +106,7 @@ describe('RecommendationsPage', () => {
             isLoadingExplanations: false,
             error: null,
             refetch: vi.fn(),
-        } as any);
+        });
 
         render(
             <BrowserRouter>

@@ -11,8 +11,15 @@ import { InterestSelectionPage } from './components/interests/interests_page';
 
 import './App.css';
 
-const isAuthenticated = localStorage.getItem('authToken') !== null;
-// const isAuthenticated = import.meta.env.VITE_USE_MOCK === 'true';
+const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+    const isAuthenticated = localStorage.getItem('authToken') !== null;
+
+    if (!isAuthenticated) {
+        return <Navigate to="/welcome" replace />;
+    }
+
+    return <Layout>{children}</Layout>;
+};
 
 const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const location = useLocation();
@@ -50,52 +57,36 @@ const App: React.FC = () => {
                 <Route
                     path="/"
                     element={
-                        isAuthenticated ? (
-                            <Layout>
-                                <RecommendationsPage />
-                            </Layout>
-                        ) : (
-                            <Navigate to="/welcome" />
-                        )
+                        <ProtectedRoute>
+                            <RecommendationsPage />
+                        </ProtectedRoute>
                     }
                 />
 
                 <Route
                     path="/profile"
                     element={
-                        isAuthenticated ? (
-                            <Layout>
-                                <ProfilePage />
-                            </Layout>
-                        ) : (
-                            <Navigate to="/welcome" />
-                        )
+                        <ProtectedRoute>
+                            <ProfilePage />
+                        </ProtectedRoute>
                     }
                 />
 
                 <Route
                     path="/course/:id"
                     element={
-                        isAuthenticated ? (
-                            <Layout>
-                                <CoursePage />
-                            </Layout>
-                        ) : (
-                            <Navigate to="/welcome" />
-                        )
+                        <ProtectedRoute>
+                            <CoursePage />
+                        </ProtectedRoute>
                     }
                 />
 
                 <Route
                     path="/setup-interests"
                     element={
-                        isAuthenticated ? (
-                            <Layout>
-                                <InterestSelectionPage />
-                            </Layout>
-                        ) : (
-                            <Navigate to="/welcome" />
-                        )
+                        <ProtectedRoute>
+                            <InterestSelectionPage />
+                        </ProtectedRoute>
                     }
                 />
             </Routes>

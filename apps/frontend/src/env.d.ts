@@ -4,7 +4,6 @@ interface ImportMetaEnv {
     readonly VITE_API_URL: string;
     readonly VITE_APP_NAME: string;
     readonly VITE_USE_MOCK: string;
-    // Add other environment variables here if you use them
 }
 
 interface ImportMeta {

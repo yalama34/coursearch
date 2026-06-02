@@ -1,6 +1,5 @@
 import {mockCourseDetails} from "../mock/mockData.ts";
 
-
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
 export const getCourseById = async (courseId: string) => {

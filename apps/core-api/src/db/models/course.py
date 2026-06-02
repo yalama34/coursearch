@@ -43,3 +43,9 @@ class Course(Base):
         secondary=course_tags,
         back_populates="courses",
     )
+
+    user_stats: Mapped[List["Stats"]] = relationship(
+        "Stats",
+        back_populates="course",
+        cascade="all, delete-orphan",
+    )

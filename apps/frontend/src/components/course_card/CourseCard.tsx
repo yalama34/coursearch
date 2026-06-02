@@ -33,6 +33,8 @@ export const CourseCard: React.FC<CourseCardProps> = ({
         card.style.setProperty('--mouse-y', `${y}px`);
     };
 
+    const title = course.title?.trim() || `Курс #${course.id}`;
+
     return (
         <Link to={`/course/${course.id}`} className="course-card-link">
             <div
@@ -51,34 +53,45 @@ export const CourseCard: React.FC<CourseCardProps> = ({
                     <div className="image-icon"></div>
                 </div>
 
-                <div className="course-content">
-                    <h3 className="course-title">{course.title}</h3>
-                    <p className="course-description">{course.description}</p>
+                <h3 className="course-title">{title}</h3>
+                <p className="course-description" title={course.description || undefined}>
+                    {course.description || '\u00A0'}
+                </p>
 
-                    {showExplanation && (
-                        <div className="course-explanation">
-                            {explanation?.confidence != null && (
-                                <span className="explanation-confidence">
-                                    {Math.round(explanation.confidence * 100)}%
-                                </span>
-                            )}
-                            {isExplanationLoading && !explanation?.text ? (
-                                <p className="explanation-loading">Генерируем объяснение...</p>
-                            ) : (
-                                explanation?.text && (
-                                    <p className="explanation-text">{explanation.text}</p>
-                                )
-                            )}
-                        </div>
+                <div
+                    className={`course-explanation${showExplanation ? '' : ' course-explanation--hidden'}`}
+                    aria-hidden={!showExplanation}
+                >
+                    {explanation?.confidence != null && (
+                        <span className="explanation-confidence">
+                            {Math.round(explanation.confidence * 100)}%
+                        </span>
                     )}
+                    {isExplanationLoading && !explanation?.text ? (
+                        <p className="explanation-loading">Генерируем объяснение...</p>
+                    ) : (
+                        explanation?.text && (
+                            <p className="explanation-text" title={explanation.text}>
+                                {explanation.text}
+                            </p>
+                        )
+                    )}
+                </div>
 
-                    <div className="course-tags">
-                        {course.tags.map((tag) => (
-                            <span key={tag.id} className="tag-pill" title={tag.label}>
-                                {tag.label}
-                            </span>
-                        ))}
-                    </div>
+                <div className="course-tags">
+                    {course.tags.slice(0, 3).map((tag) => (
+                        <span key={tag.id} className="tag-pill" title={tag.label}>
+                            {tag.label}
+                        </span>
+                    ))}
+                    {course.tags.length > 3 && (
+                        <span
+                            className="tag-pill tag-pill-more"
+                            title={course.tags.slice(3).map((tag) => tag.label).join(', ')}
+                        >
+                            +{course.tags.length - 3}
+                        </span>
+                    )}
                 </div>
             </div>
         </Link>

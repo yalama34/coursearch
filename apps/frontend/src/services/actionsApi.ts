@@ -15,7 +15,7 @@ const getAuthHeaders = (): Record<string, string> => {
     const token = localStorage.getItem('authToken');
 
     if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
+        headers['X-Session-Token'] = token;
     }
 
     return headers;
@@ -42,7 +42,7 @@ export const actionsApi = {
             return;
         }
 
-        const res = await fetch(`${API_BASE_URL}/engagment`, {
+        const res = await fetch(`${API_BASE_URL}/engagement`, {
             method: 'POST',
             headers: getAuthHeaders(),
             body: JSON.stringify(payload),

@@ -1,0 +1,58 @@
+{
+  "view_ranker": {
+    "model_type": "CatBoostRanker",
+    "loss_function": "YetiRankPairwise",
+    "n_features": 61,
+    "top_5_features": [
+      {
+        "Feature Id": "session_views",
+        "Importances": 0.020418051898679623
+      },
+      {
+        "Feature Id": "session_duration_hours",
+        "Importances": 0.019934084932113738
+      },
+      {
+        "Feature Id": "session_like_rate",
+        "Importances": 0.0115004309391189
+      },
+      {
+        "Feature Id": "hours_since_prev_view",
+        "Importances": 0.005304403959004611
+      },
+      {
+        "Feature Id": "course_views_30d",
+        "Importances": 0.003853686854985383
+      }
+    ],
+    "total_importance_sum": 0.0638152017515779
+  },
+  "like_classifier": {
+    "model_type": "CatBoostClassifier",
+    "loss_function": "Logloss",
+    "n_features": 61,
+    "top_5_features": [
+      {
+        "Feature Id": "cosine_distance",
+        "Importances": 21.053117791270164
+      },
+      {
+        "Feature Id": "course_like_rate",
+        "Importances": 8.09525135061333
+      },
+      {
+        "Feature Id": "jaccard_tags",
+        "Importances": 7.45331772894467
+      },
+      {
+        "Feature Id": "cooc_mean",
+        "Importances": 7.174674700957562
+      },
+      {
+        "Feature Id": "primary_domain_match",
+        "Importances": 6.232786744061419
+      }
+    ],
+    "total_importance_sum": 94.12411703284333
+  }
+}

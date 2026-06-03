@@ -8,14 +8,21 @@ class LLMExplanation:
     def __init__(self) -> None:
         self.__client = LLMClient()
 
-    async def get_explanations(self, user_tags: list[str], courses_list: list[dict[str, int | str]]) -> list[dict[str, int | str]]:
+    async def get_explanations(
+        self,
+        user_tags: list[str],
+        courses_list: list[dict[str, int | str]],
+        user_description: str | None = None,
+    ) -> list[dict[str, int | str]]:
         """
         Gets recommendations explanations using LLM for given user and course tags
         :param user_tags:
         :param courses_list:
+        :param user_description:
         :return:
         """
-        user_tags_str = ", ".join(user_tags)
+        user_tags_str = ", ".join(user_tags) if user_tags else "не указаны"
+        about_text = user_description.strip() if user_description and user_description.strip() else "не указано"
 
         courses_text = ""
         for course in courses_list:
@@ -26,6 +33,7 @@ class LLMExplanation:
         user_prompt: str = f"""
         ПРОФИЛЬ ПОЛЬЗОВАТЕЛЯ:
         Интересы (теги): {user_tags_str}
+        О себе: {about_text}
 
         КУРСЫ, ДЛЯ КОТОРЫХ НУЖНО НАПИСАТЬ ОБЪЯСНЕНИЯ:
         {courses_text}

@@ -2,13 +2,13 @@ import asyncio
 
 import httpx
 
-from src.integrations.ml_service.schemas import RecommendationResponse
+from src.integrations.ml_service.schemas import ExplanationsResponse, RecommendationResponse
 
 class MLServiceClient:
     def __init__(self, base_url: str = "http://ml-service:8001"):
         self.client = httpx.AsyncClient(
             base_url=base_url,
-            timeout=httpx.Timeout(timeout=5.0, connect=2.0),
+            timeout=httpx.Timeout(timeout=120.0, connect=5.0),
         )
 
     async def _request_with_retry(
@@ -60,9 +60,10 @@ class MLServiceClient:
 
 
     async def get_recommendations(
-        self,
-        user_id: int,
-        limit: int = 10,
+            self,
+            user_id: int,
+            limit: int = 10,
+            force: bool = False,
     ) -> RecommendationResponse:
         """
         Get recommendations for a user by user ID
@@ -71,6 +72,26 @@ class MLServiceClient:
         """
         data = await self.get(
             path="/recommendations",
-            params={"user_id": user_id, "limit": limit},
+            params={
+                "user_id": user_id,
+                "limit": limit,
+                "force": force,
+            },
         )
         return RecommendationResponse.model_validate(data)
+
+    async def get_explanations(
+            self,
+            user_id: int,
+            course_ids: list[int],
+            force: bool = False,
+    ) -> ExplanationsResponse:
+        data = await self.get(
+            path="/recommendations/explanations",
+            params={
+                "user_id": user_id,
+                "course_ids": ",".join(str(cid) for cid in course_ids),
+                "force": force,
+            },
+        )
+        return ExplanationsResponse.model_validate(data)

@@ -29,6 +29,37 @@ class ProfileService:
 
         return ProfileResponse(
             user_id=user.user_id,
+            nickname=user.nickname,
+            description=user.description,
             tags=tags,
             liked_courses=courses,
         )
+
+    async def update_tags(
+            self,
+            user_id: int,
+            tags: list[str]
+    ) -> None:
+        """
+        Update user tags
+        """
+        await self.repository.set_user_tags(user_id, tags)
+        await self.session.commit()
+
+    async def update_description(
+            self,
+            user_id: int,
+            description: str,
+    ) -> None:
+        """
+        Update user description
+        """
+
+        description = description.strip()
+
+        await self.repository.set_user_description(
+            user_id,
+            description if description else None,
+        )
+
+        await self.session.commit()

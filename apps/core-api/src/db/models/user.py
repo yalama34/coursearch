@@ -28,6 +28,11 @@ class User(Base):
         nullable=True,
     )
 
+    description: Mapped[str | None] = mapped_column(
+        Text,
+        nullable=True,
+    )
+
     actions: Mapped[List["Action"]] = relationship(
         "Action",
         back_populates="user",
@@ -38,4 +43,10 @@ class User(Base):
         "Tag",
         secondary=user_tags,
         back_populates="users",
+    )
+
+    course_stats: Mapped[List["Stats"]] = relationship(
+        "Stats",
+        back_populates="user",
+        cascade="all, delete-orphan",
     )

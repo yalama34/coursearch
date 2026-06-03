@@ -1,0 +1,215 @@
+.course-card-link {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+    width: 100%;
+    min-width: 0;
+    height: 100%;
+    overflow: hidden;
+}
+
+.course-card {
+    position: relative;
+    background-color: var(--color-card-bg);
+    border-radius: 12px;
+    padding: 16px;
+    width: 100%;
+    height: 400px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transition: var(--transition-spring);
+    opacity: 0;
+    animation: var(--animation-fade-in-up);
+    --mouse-x: 0px;
+    --mouse-y: 0px;
+    box-sizing: border-box;
+}
+
+.course-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(
+            800px circle at var(--mouse-x, 0) var(--mouse-y, 0),
+            var(--color-accent-soft),
+            transparent 40%
+    );
+    z-index: 1;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.5s ease;
+}
+
+.course-card:hover::before {
+    opacity: 1;
+}
+
+.course-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+}
+
+.course-image-placeholder {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-shrink: 0;
+    height: 44px;
+    opacity: 0.4;
+    z-index: 2;
+}
+
+.image-icon {
+    width: 40px;
+    height: 40px;
+    border: 4px solid #666666;
+    border-radius: 12px;
+    position: relative;
+}
+
+.image-icon::before,
+.image-icon::after {
+    content: '';
+    position: absolute;
+    border: 3px solid #666666;
+}
+
+.image-icon::before {
+    top: 8px;
+    right: 8px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+}
+
+.image-icon::after {
+    bottom: 8px;
+    left: 8px;
+    width: 32px;
+    height: 32px;
+}
+
+.course-title {
+    font-size: 14px;
+    font-weight: bold;
+    color: #333333;
+    margin: 4px 0 0;
+    flex-shrink: 0;
+    height: 36px;
+    max-height: 36px;
+    min-height: 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    line-height: 1.35;
+    z-index: 2;
+}
+
+.course-description {
+    font-size: 12px;
+    color: #666666;
+    margin: 4px 0 0;
+    flex-shrink: 0;
+    height: 34px;
+    max-height: 34px;
+    min-height: 34px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    line-height: 1.35;
+    z-index: 2;
+}
+
+.course-explanation {
+    margin-top: 6px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    background-color: rgba(0, 0, 0, 0.04);
+    flex: 1 1 0;
+    min-height: 72px;
+    overflow: hidden;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+}
+
+.course-explanation--hidden {
+    visibility: hidden;
+}
+
+.explanation-confidence {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--color-accent, #6366f1);
+    margin-bottom: 4px;
+    flex-shrink: 0;
+}
+
+.explanation-loading {
+    font-size: 11px;
+    color: #888888;
+    font-style: italic;
+    margin: 0;
+}
+
+.explanation-text {
+    font-size: 11px;
+    color: #555555;
+    margin: 0;
+    flex: 1;
+    min-height: 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 5;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    line-height: 1.4;
+}
+
+.course-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: flex-start;
+    align-content: flex-start;
+    flex-shrink: 0;
+    margin-top: 8px;
+    height: 40px;
+    max-height: 40px;
+    overflow: hidden;
+    z-index: 2;
+}
+
+.tag-pill {
+    background-color: var(--color-tag-bg);
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 10px;
+    font-weight: 600;
+    color: #333333;
+    transition: transform 0.1s cubic-bezier(0.25, 1, 0.5, 1);
+    cursor: default;
+    line-height: 1.3;
+    display: inline-flex;
+    align-items: center;
+    flex: 0 1 auto;
+    max-width: 100%;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    box-sizing: border-box;
+}
+
+.tag-pill-more {
+    background-color: rgba(51, 51, 51, 0.12);
+    color: #333333;
+    flex-shrink: 0;
+}
+
+.tag-pill:active {
+    transform: scale(0.95);
+}

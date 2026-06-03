@@ -1,17 +1,18 @@
 import { ProfileData, RecommendationResponse } from '../types/types';
+import LogoImage from '../components/assets/coursearch_logo.png';
 
 export const mockProfile: ProfileData = {
     userId: '12345',
     name: 'Имя пользователя',
-    interests: [/*
+    interests: [
         { id: '1', label: 'Frontend' },
         { id: '2', label: 'JavaScript' },
         { id: '3', label: 'TypeScript' },
         { id: '4', label: 'Python' },
         { id: '5', label: 'Data Science' },
-        { id: '6', label: 'Backend' },*/
+        { id: '6', label: 'Backend' },
     ],
-    favoriteCourses: [/*
+    favoriteCourses: [
         {
             id: '1',
             title: 'Introduction to React',
@@ -20,6 +21,8 @@ export const mockProfile: ProfileData = {
                 { id: '1', label: 'Frontend' },
                 { id: '2', label: 'JavaScript' },
             ],
+            author: 'Me',
+            imageUrl: '',
         },
         {
             id: '2',
@@ -29,6 +32,8 @@ export const mockProfile: ProfileData = {
                 { id: '3', label: 'TypeScript' },
                 { id: '2', label: 'JavaScript' },
             ],
+            author: 'Me',
+            imageUrl: '',
         },
         {
             id: '3',
@@ -38,6 +43,8 @@ export const mockProfile: ProfileData = {
                 { id: '4', label: 'Python' },
                 { id: '5', label: 'Data Science' },
             ],
+            author: 'Me',
+            imageUrl: '',
         },
         {
             id: '4',
@@ -47,12 +54,14 @@ export const mockProfile: ProfileData = {
                 { id: '4', label: 'Python' },
                 { id: '6', label: 'Backend' },
             ],
-        },*/
+            author: 'Me',
+            imageUrl: '',
+        },
     ],
 };
 
 export const mockRecommendations: RecommendationResponse = {
-    recommendations: [/*
+    recommendations: [
         {
             id: '1',
             title: 'Advanced React Patterns',
@@ -61,6 +70,12 @@ export const mockRecommendations: RecommendationResponse = {
                 { id: '1', label: 'Frontend' },
                 { id: '2', label: 'JavaScript' },
             ],
+            author: 'Me',
+            imageUrl: '',
+            recommendationExplanation: {
+                text: 'Этот курс подходит вам, потому что вы интересуетесь React и JavaScript.',
+                confidence: 0.87,
+            },
         },
         {
             id: '2',
@@ -70,6 +85,8 @@ export const mockRecommendations: RecommendationResponse = {
                 { id: '6', label: 'Backend' },
                 { id: '9', label: 'Node.js' },
             ],
+            author: 'Me',
+            imageUrl: '',
         },
         {
             id: '3',
@@ -79,6 +96,8 @@ export const mockRecommendations: RecommendationResponse = {
                 { id: '4', label: 'Python' },
                 { id: '5', label: 'Data Science' },
             ],
+            author: 'Me',
+            imageUrl: '',
         },
         {
             id: '4',
@@ -88,6 +107,8 @@ export const mockRecommendations: RecommendationResponse = {
                 { id: '10', label: 'DevOps' },
                 { id: '11', label: 'Docker' },
             ],
+            author: 'Me',
+            imageUrl: '',
         },
         {
             id: '5',
@@ -97,6 +118,8 @@ export const mockRecommendations: RecommendationResponse = {
                 { id: '6', label: 'Backend' },
                 { id: '12', label: 'GraphQL' },
             ],
+            author: 'Me',
+            imageUrl: '',
         },
         {
             id: '6',
@@ -106,6 +129,8 @@ export const mockRecommendations: RecommendationResponse = {
                 { id: '1', label: 'Frontend' },
                 { id: '13', label: 'CSS' },
             ],
+            author: 'Me',
+            imageUrl: '',
         },
         {
             id: '7',
@@ -115,6 +140,8 @@ export const mockRecommendations: RecommendationResponse = {
                 { id: '6', label: 'Backend' },
                 { id: '14', label: 'Database' },
             ],
+            author: 'Me',
+            imageUrl: '',
         },
         {
             id: '8',
@@ -124,6 +151,8 @@ export const mockRecommendations: RecommendationResponse = {
                 { id: '10', label: 'DevOps' },
                 { id: '15', label: 'AWS' },
             ],
+            author: 'Me',
+            imageUrl: '',
         },
         {
             id: '9',
@@ -133,6 +162,8 @@ export const mockRecommendations: RecommendationResponse = {
                 { id: '1', label: 'Frontend' },
                 { id: '16', label: 'Mobile' },
             ],
+            author: 'Me',
+            imageUrl: '',
         },
         {
             id: '10',
@@ -142,6 +173,21 @@ export const mockRecommendations: RecommendationResponse = {
                 { id: '6', label: 'Backend' },
                 { id: '17', label: 'Architecture' },
             ],
-        },*/
+            author: 'Me',
+            imageUrl: '',
+        },
+    ],
+};
+
+export const mockCourseDetails = {
+    id: '1',
+    title: 'Coursearch',
+    description: 'ээээ типа проект бро',
+    author: 'Прудников Ярик(любит сокращения)',
+    imageUrl: LogoImage,
+    tags: [
+        { id: '1', label: 'TypeScript' },
+        { id: '2', label: 'rEACT' },
+        { id: '3', label: 'Python' },
     ],
 };

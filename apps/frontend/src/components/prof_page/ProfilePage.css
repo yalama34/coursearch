@@ -141,6 +141,21 @@
     transition: background-color 0.2s;
 }
 
+.course-card-link {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+    height: 100%;
+    width: 100%;
+    border-radius: 12px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.course-card-link:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.4);
+}
+
 .add-interest-btn:hover {
     background-color: #a078d8;
 }
@@ -153,8 +168,25 @@
 
 .favorites-grid {
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    gap: 16px;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 20px;
+    width: 100%;
+}
+
+.favorites-grid > * {
+    min-width: 0;
+}
+
+.profile-description-display {
+    margin-top: 8px;
+    font-size: 14px;
+    color: var(--color-text-secondary);
+    line-height: 1.5;
+    max-width: 500px;
+}
+.profile-description-display.empty {
+    color: #666;
+    font-style: italic;
 }
 
 .save-button {
@@ -172,4 +204,49 @@
 
 .save-button:hover {
     background-color: #a078d8;
+}
+
+@media (max-width: 768px) {
+    .main-content { padding: 16px; }
+    .page-title { font-size: 28px; text-align: center; }
+
+    .course-top-section { flex-direction: column; align-items: center; text-align: center; }
+    .course-left-content { flex-direction: column; align-items: center; }
+    .course-author { align-self: center; margin-top: 16px; }
+
+    .profile-header { flex-direction: column; align-items: center; text-align: center; }
+    .interests-container { min-width: 100%; }
+
+    .search-input { width: 120px; }
+}
+
+@media (max-width: 768px) {
+    .interests-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    .edit-interests-btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+@media (max-width: 1200px) {
+    .favorites-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 768px) {
+    .favorites-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 480px) {
+    .favorites-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
 }

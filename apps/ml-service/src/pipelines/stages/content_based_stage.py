@@ -7,13 +7,12 @@ from sqlalchemy.orm import selectinload
 from numpy.typing import NDArray
 import numpy as np
 
+from src.utils.user_profile import build_user_profile_text
 from src.schemas.recommendations import RecommendationItem, RecommendationExplanation
 from src.domain.recommendation.pipeline_order import StageName
 from src.engine.chroma_client import ChromaClient
 from src.engine.embeddings import EmbeddingEngine
 from src.db.models import Course, User
-from src.integrations.llm.client import LLMClient
-from src.integrations.llm.services.explanation import LLMExplanation
 
 
 logger = logging.getLogger(__name__)
@@ -24,7 +23,6 @@ class ContentBasedStage:
         self.__db_session: AsyncSession = session
         self.__chroma_client = ChromaClient()
         self.__embedding_engine = EmbeddingEngine(self.__model_path)
-        self.__llm_client = LLMClient()
 
     @property
     def stage_name(self) -> str:
@@ -50,12 +48,16 @@ class ContentBasedStage:
         result = await self.__db_session.execute(query)
         user = result.scalar_one_or_none()
 
-        if not user or not user.tags:
-            logger.info("No tags found for user %s", user_id)
+        if not user:
+            logger.info("User %s not found", user_id)
             return candidates
 
         user_tags_list = [tag.name for tag in user.tags]
-        user_text = " ".join(user_tags_list)
+        user_text = build_user_profile_text(user_tags_list, user.description)
+        if not user_text:
+            logger.info("No tags or description found for user %s", user_id)
+            return candidates
+
         user_embeddings: NDArray[np.float32] = self.__embedding_engine.generate(user_text)
 
         filters = None
@@ -98,36 +100,14 @@ class ContentBasedStage:
         courses_result = await self.__db_session.execute(courses_query)
         courses_db = courses_result.scalars().all()
 
-        courses_for_llm = []
-        for course in courses_db:
-            courses_for_llm.append({
-                "course_id": course.course_id,
-                "name": course.name,
-                "tags": [tag.name for tag in course.tags]
-            })
-
-        llm_explainer = LLMExplanation()
-        generated_explanations = await llm_explainer.get_explanations(
-            user_tags=user_tags_list,
-            courses_list=courses_for_llm
-        )
-
-        explanations_dict = {
-            item.get("course_id"): item.get("explanation")
-            for item in generated_explanations
-            if "course_id" in item and "explanation" in item
-        }
-
         result_candidates = []
 
         for cid in final_course_ids:
             existing_candidate = next((c for c in candidates if c.item_id == cid), None)
             old_confidence = existing_candidate.explanation.confidence if existing_candidate and existing_candidate.explanation else None
 
-            explanation_text = explanations_dict.get(cid, "Подходит по вашим интересам (на основе тегов)")
-
             explanation = RecommendationExplanation(
-                text=explanation_text,
+                text="",
                 confidence=old_confidence
             )
 

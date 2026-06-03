@@ -11,3 +11,9 @@ DEFAULT_RECOMMENDATION_PIPELINE_ORDER = [
     StageName.TOP_N,
     StageName.LIKE_RANKER,
 ]
+
+FORCE_REFRESH_PIPELINE_ORDER = [
+    StageName.CONTENT_BASED,
+    StageName.TOP_N,
+    StageName.LIKE_RANKER,
+]

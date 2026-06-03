@@ -59,9 +59,7 @@ services:
       - recsys_net
 
   ml_service:
-    build:
-      context: ./apps/ml-service
-      dockerfile: ./Dockerfile
+    image: ghcr.io/yalama34/coursearch/recsys-ml-service:${IMAGE_TAG:-latest}
 
     container_name: recsys_ml_service
     restart: always
@@ -115,10 +113,8 @@ services:
       - recsys_net
 
   migration:
-    image: recsys_backend_image:latest
-    build:
-      context: ./apps/core-api
-      dockerfile: ./Dockerfile
+    image: ghcr.io/yalama34/coursearch/recsys-core-api:${IMAGE_TAG:-latest}
+
     container_name: recsys_migrations
 
     command: ./migrate.sh
@@ -130,6 +126,8 @@ services:
       DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD}
       DB_NAME: ${DB_NAME}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
 
     depends_on:
       postgres:
@@ -139,7 +137,8 @@ services:
       - recsys_net
 
   core_api:
-    image: recsys_backend_image:latest
+    image: ghcr.io/yalama34/coursearch/recsys-core-api:${IMAGE_TAG:-latest}
+
     container_name: recsys_backend
     restart: always
 
@@ -153,13 +152,16 @@ services:
       # chroma
       CHROMA_HOST: chroma
       CHROMA_PORT: 8000
+      #redis
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
       # ml-service
       ML_SERVICE_URL: http://ml_service:8001
 
     depends_on:
       postgres:
         condition: service_healthy
-      chroma:
+      redis:
         condition: service_healthy
       ml_service:
         condition: service_healthy
@@ -173,24 +175,57 @@ services:
       - recsys_net
 
 
-  # frontend:
-  #   build:
-  #     dockerfile: ./Dockerfile
-  #     context: ./apps/frontend
+  frontend:
+     image: ghcr.io/yalama34/coursearch/recsys-frontend:${IMAGE_TAG:-latest}
 
-  #   container_name: frontend
-  #   restart: always
+     container_name: frontend
+     restart: always
 
-  #   environment:
-  #     - REACT_APP_API_URL=http://core_api:8000
-  #   depends_on:
-  #     - core_api
+     environment:
+       - REACT_APP_API_URL=http://core_api:8000
+     depends_on:
+       - core_api
 
-  #   ports:
-  #     - "${FRONTEND_PORT}:3000"
+     ports:
+       - "${FRONTEND_PORT}:3000"
 
-  #   networks:
-  #     - recsys_net
+     networks:
+       - recsys_net
+
+  course_provider:
+    image: ghcr.io/yalama34/coursearch/recsys-course-provider:${IMAGE_TAG:-latest}
+
+    container_name: recsys_course_provider
+    restart: always
+
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+
+      STEPIK_CLIENT_ID: ${STEPIK_CLIENT_ID}
+      STEPIK_CLIENT_SECRET: ${STEPIK_CLIENT_SECRET}
+      UDEMY_CLIENT_ID: ${UDEMY_CLIENT_ID}
+      UDEMY_CLIENT_SECRET: ${UDEMY_CLIENT_SECRET}
+      ENABLED_PROVIDERS: ${ENABLED_PROVIDERS}
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+      migration:
+        condition: service_completed_successfully
+
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f -s -o /dev/null --max-time 5 http://localhost:8002/health || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+    networks:
+      - recsys_net
 
 
 volumes:

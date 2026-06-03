@@ -1,8 +1,5 @@
-
 import json
 import pickle
-import pandas as pd
-import numpy as np
 from catboost import CatBoostRanker
 
 model = CatBoostRanker()
@@ -12,4 +9,9 @@ with open("scaler.pkl", "rb") as f:
 with open("feature_cols.json", "r") as f:
     feature_cols = json.load(f)
 
-print("Модель и артефакты загружены.")
+with open("le_difficulty.pkl", "rb") as f:
+    le_difficulty = pickle.load(f)
+
+with open("le_domain.pkl", "rb") as f:
+    le_domain = pickle.load(f)
+

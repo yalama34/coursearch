@@ -80,9 +80,9 @@ def get_data_for_pipeline() -> list[list[InputExample] | pd.DataFrame]:
     ``df_test`` is a pandas DataFrame containing the test data
     """
     dfs = []
-    for category in ["A", "B", "C", "D", "E"]:
-        path = SYNTHETIC_DIR / f"{category}.json"
-        if path.exists():
+    for path in SYNTHETIC_DIR.glob("*.json"):
+        if path.is_file():
+            category = path.stem
             df_cur = pd.read_json(path)
             df_cur["category"] = category
             dfs.append(df_cur)
@@ -90,6 +90,9 @@ def get_data_for_pipeline() -> list[list[InputExample] | pd.DataFrame]:
     if dfs:
         df = pd.concat(dfs, ignore_index=True)
         df = clean_data(df)
+
+        df = df[~((df["category"].isin(["A", "B", "C", "D", "E"])) & (df["score"] >= 0.2) & (df["score"] <= 0.5))]
+        
         analyze_distributions(df)
 
         train_parts: list[pd.DataFrame] = []

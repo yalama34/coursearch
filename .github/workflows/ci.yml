@@ -1,0 +1,158 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [ main, develop, 'feature/**' ]
+  push:
+    branches: [ main, develop, 'feature/**' ]
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    outputs:
+      core: ${{ steps.filter.outputs.core }}
+      ml: ${{ steps.filter.outputs.ml }}
+      frontend: ${{ steps.filter.outputs.frontend }}
+      ml_base: ${{ steps.filter.outputs.ml_base }}
+      provider: ${{ steps.filter.outputs.provider }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Detect changes
+        uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            core:
+              - 'apps/core-api/**'
+
+            ml:
+              - 'apps/ml-service/**'
+              - '!apps/ml-service/requirements.txt'
+
+            ml_base:
+              - 'apps/ml-service/requirements.txt'
+
+            frontend:
+              - 'apps/frontend/**'
+            
+            provider:
+              - 'apps/course-provider/**'
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.11
+
+      - name: Install deps
+        run: pip install -r apps/core-api/requirements.txt
+
+  build:
+    runs-on: ubuntu-latest
+    needs: test
+    if: needs.test.result == 'success'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set image tags
+        run: |
+          BRANCH="${{ github.head_ref || github.ref_name }}"
+          SAFE_BRANCH=$(echo "$BRANCH" | tr '[:upper:]' '[:lower:]' | sed 's#[^a-z0-9._-]#-#g')
+
+          if [ "$BRANCH" = "main" ]; then
+            TAG=latest
+            BASE_TAG=latest
+          else
+            TAG=develop
+            BASE_TAG=develop
+          fi
+
+          SHA_TAG="${SAFE_BRANCH}-${{ github.sha }}"
+
+          echo "TAG=$TAG" >> $GITHUB_ENV
+          echo "BASE_TAG=$BASE_TAG" >> $GITHUB_ENV
+          echo "SHA_TAG=$SHA_TAG" >> $GITHUB_ENV
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login GHCR
+        if: github.event_name == 'push' && (github.ref_name == 'main' || github.ref_name == 'develop')
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # ML BASE
+      - name: Build ML base
+        if: needs.test.outputs.ml_base == 'true'
+        uses: docker/build-push-action@v5
+        with:
+          context: ./apps/ml-service
+          file: apps/ml-service/Dockerfile.base
+          push: ${{ github.event_name == 'push' && (github.ref_name == 'main' || github.ref_name == 'develop') }}
+          tags: ghcr.io/${{ github.repository }}/recsys-ml-base:${{ env.BASE_TAG }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # ML SERVICE
+      - name: Build ML service
+        if: needs.test.outputs.ml == 'true' || needs.test.outputs.ml_base == 'true'
+        uses: docker/build-push-action@v5
+        with:
+          context: ./apps/ml-service
+          build-args: |
+            BASE_TAG=${{ env.BASE_TAG }}
+          push: ${{ github.event_name == 'push' && (github.ref_name == 'main' || github.ref_name == 'develop') }}
+          tags: |
+            ghcr.io/${{ github.repository }}/recsys-ml-service:${{ env.TAG }}
+            ghcr.io/${{ github.repository }}/recsys-ml-service:${{ env.SHA_TAG }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # CORE API
+      - name: Build core-api
+        if: needs.test.outputs.core == 'true'
+        uses: docker/build-push-action@v5
+        with:
+          context: ./apps/core-api
+          push: ${{ github.event_name == 'push' && (github.ref_name == 'main' || github.ref_name == 'develop') }}
+          tags: |
+            ghcr.io/${{ github.repository }}/recsys-core-api:${{ env.TAG }}
+            ghcr.io/${{ github.repository }}/recsys-core-api:${{ env.SHA_TAG }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # FRONTEND
+      - name: Build frontend
+        if: needs.test.outputs.frontend == 'true'
+        uses: docker/build-push-action@v5
+        with:
+          context: ./apps/frontend
+          push: ${{ github.event_name == 'push' && (github.ref_name == 'main' || github.ref_name == 'develop') }}
+          tags: |
+            ghcr.io/${{ github.repository }}/recsys-frontend:${{ env.TAG }}
+            ghcr.io/${{ github.repository }}/recsys-frontend:${{ env.SHA_TAG }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # COURSE PROVIDER
+      - name: Build course provider
+        if: needs.test.outputs.provider == 'true'
+        uses: docker/build-push-action@v5
+        with:
+          context: ./apps/course-provider
+          push: ${{ github.event_name == 'push' && (github.ref_name == 'main' || github.ref_name == 'develop') }}
+          tags: |
+            ghcr.io/${{ github.repository }}/recsys-course-provider:${{ env.TAG }}
+            ghcr.io/${{ github.repository }}/recsys-course-provider:${{ env.SHA_TAG }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

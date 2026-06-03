@@ -47,10 +47,10 @@
     "last_interaction_days",
     "difficulty_match"
   ],
-  "training_date": "2026-05-04T11:35:15.183470",
-  "roc_auc": null,
-  "pr_auc": null,
-  "ndcg@10": null,
+  "training_date": "2026-06-03T00:53:57.259382",
+  "roc_auc": 0.884549427360843,
+  "pr_auc": 0.8721547520107427,
+  "ndcg@10": 0.9216802180302586,
   "iterations": 1000,
   "learning_rate": 0.03,
   "depth": 6

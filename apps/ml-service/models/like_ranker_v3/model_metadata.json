@@ -64,7 +64,7 @@
     "hours_since_prev_view",
     "difficulty_match"
   ],
-  "training_date": "2026-05-26T21:23:25.402355",
+  "training_date": "2026-06-03T00:58:30.739866",
   "ndcg@5": 0.6868,
   "precision@1": 0.4454,
   "lookahead_hours": 6,

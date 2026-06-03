@@ -25,7 +25,7 @@ class LikeRankerStage:
         self.view_model.load_model(os.path.join(models_dir, "view_ranker", "catboost_ranker.cbm"))
 
         self.like_model = CatBoostRanker()
-        self.like_model.load_model(os.path.join(models_dir, "like_ranker_v2", "catboost_ranker_post.cbm"))
+        self.like_model.load_model(os.path.join(models_dir, "like_ranker_v3", "catboost_ranker.cbm"))
 
         self.weight_view = float(os.getenv("RANK_BLEND_VIEW_WEIGHT", "0.5"))
         self.weight_like = float(os.getenv("RANK_BLEND_LIKE_WEIGHT", "0.5"))

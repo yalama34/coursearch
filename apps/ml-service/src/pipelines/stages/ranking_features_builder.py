@@ -73,6 +73,46 @@ class RankingFeaturesBuilder:
         ts_7d = now_ts - timedelta(days=7)
         ts_30d = now_ts - timedelta(days=30)
 
+        actions_q = (
+            select(Action)
+            .where(Action.user_id == user_id)
+            .order_by(Action.created_at.desc())
+            .limit(100)
+        )
+
+        actions = (
+            await self.__db_session.execute(actions_q)
+        ).scalars().all()
+
+        ts_1h = now_ts - timedelta(hours=1)
+        ts_4h = now_ts - timedelta(hours=4)
+
+        user_views_1h_q = (
+            select(func.count())
+            .where(
+                Action.user_id == user_id,
+                Action.action_type == ActionType.VIEW,
+                Action.created_at >= ts_1h,
+            )
+        )
+
+        user_views_4h_q = (
+            select(func.count())
+            .where(
+                Action.user_id == user_id,
+                Action.action_type == ActionType.VIEW,
+                Action.created_at >= ts_4h,
+            )
+        )
+
+        user_views_1h = float(
+            (await self.__db_session.execute(user_views_1h_q)).scalar() or 0
+        )
+
+        user_views_4h = float(
+            (await self.__db_session.execute(user_views_4h_q)).scalar() or 0
+        )
+
         agg_q = (
             select(
                 func.count().filter(
@@ -124,13 +164,126 @@ class RankingFeaturesBuilder:
         )
         user_unique_tags_7d = float((await self.__db_session.execute(uniq_tags_q)).scalar() or 0)
 
+        user_views_7d = float(agg.user_views_7d or 0)
+        user_views_30d = float(agg.user_views_30d or 0)
+        user_likes_30d = float(agg.user_likes_30d or 0)
+
+        hour_of_day = float(now_ts.hour)
+
+        is_weekend = float(
+            now_ts.weekday() >= 5
+        )
+
+        user_like_rate_30d = (
+                user_likes_30d /
+                max(1, user_views_30d + user_likes_30d)
+        )
+
+        last_action_time = actions[0].created_at if actions else None
+
+        days_since_last_action = (
+            (now_ts - last_action_time).days
+            if last_action_time
+            else 999
+        )
+
+        last_view = next(
+            (
+                a.created_at
+                for a in actions
+                if a.action_type == ActionType.VIEW
+            ),
+            None
+        )
+
+        hours_since_prev_view = (
+            (now_ts - last_view).total_seconds() / 3600.0
+            if last_view
+            else 999.0
+        )
+
+        ts_14d = now_ts - timedelta(days=14)
+
+        prev_views_q = (
+            select(func.count())
+            .where(
+                Action.user_id == user_id,
+                Action.action_type == ActionType.VIEW,
+                Action.created_at >= ts_14d,
+                Action.created_at < ts_7d,
+            )
+        )
+
+        user_views_prev_7d = float(
+            (await self.__db_session.execute(prev_views_q)).scalar() or 0
+        )
+
+        user_views_trend = (
+                (user_views_7d + 1.0)
+                /
+                (user_views_prev_7d + 1.0)
+        )
+
+        last_like = next(
+            (
+                a.created_at
+                for a in actions
+                if a.action_type == ActionType.LIKE
+            ),
+            None
+        )
+
+        if last_like:
+            time_since_last_like_hours = (
+                now_ts - last_like
+            ).total_seconds() / 3600.0
+        else:
+            time_since_last_like_hours = 999.0
+
+        recent_three_views = []
+
+        for event in actions:
+            if event.action_type == ActionType.VIEW:
+                recent_three_views.append(event)
+
+            if len(recent_three_views) == 3:
+                break
+
+        if recent_three_views:
+            cutoff = recent_three_views[-1].created_at
+
+            likes_in_last_3_views = sum(
+                1
+                for event in actions
+                if (
+                    event.action_type == ActionType.LIKE
+                    and event.created_at >= cutoff
+                )
+            )
+        else:
+            likes_in_last_3_views = 0
+
+        user_activity_ratio_7d_30d = ((user_views_7d + 1.0) / (user_views_30d + 1.0))
+
         return {
-            "user_views_7d": float(agg.user_views_7d or 0),
+            "user_views_7d": user_views_7d,
             "user_likes_7d": float(agg.user_likes_7d or 0),
-            "user_views_30d": float(agg.user_views_30d or 0),
-            "user_likes_30d": float(agg.user_likes_30d or 0),
+            "user_views_30d": user_views_30d,
+            "user_likes_30d": user_likes_30d,
+            "user_views_1h": user_views_1h,
+            "user_views_4h": user_views_4h,
+            "user_views_prev_7d": user_views_prev_7d,
+            "user_views_trend": user_views_trend,
+            "user_activity_ratio_7d_30d": user_activity_ratio_7d_30d,
             "user_unique_courses_7d": user_unique_courses_7d,
             "user_unique_tags_7d": user_unique_tags_7d,
+            "user_like_rate_30d": user_like_rate_30d,
+            "days_since_last_action": days_since_last_action,
+            "time_since_last_like_hours": time_since_last_like_hours,
+            "likes_in_last_3_views": likes_in_last_3_views,
+            "hours_since_prev_view": hours_since_prev_view,
+            "hour_of_day": hour_of_day,
+            "is_weekend": is_weekend,
         }
 
     async def _get_precomputed_features_bulk(
@@ -164,6 +317,147 @@ class RankingFeaturesBuilder:
             }
         return out
 
+    async def _get_user_course_history(
+            self,
+            user_id: int,
+            course_ids: list[int]
+    ) -> dict[int, dict]:
+
+        if not course_ids:
+            return {}
+
+        q = (
+            select(
+                Action.course_id,
+
+                func.count().filter(
+                    Action.action_type == ActionType.VIEW
+                ).label("views"),
+
+                func.count().filter(
+                    Action.action_type == ActionType.LIKE
+                ).label("likes"),
+
+                func.max(Action.created_at).label("last_action")
+            )
+            .where(
+                Action.user_id == user_id,
+                Action.course_id.in_(course_ids)
+            )
+            .group_by(Action.course_id)
+        )
+
+        rows = (
+            await self.__db_session.execute(q)
+        ).all()
+
+        result = {}
+
+        for row in rows:
+            result[row.course_id] = {
+                "views": int(row.views or 0),
+                "likes": int(row.likes or 0),
+                "last_action": row.last_action,
+            }
+
+        return result
+
+    async def _get_course_stats(
+            self,
+            course_ids: list[int]
+    ) -> dict[int, dict]:
+
+        if not course_ids:
+            return {}
+
+        now_ts = datetime.now()
+
+        ts_7d = now_ts - timedelta(days=7)
+        ts_30d = now_ts - timedelta(days=30)
+        ts_14d = now_ts - timedelta(days=14)
+
+        q = (
+            select(
+                Action.course_id,
+
+                func.count().filter(
+                    (Action.action_type == ActionType.VIEW)
+                    & (Action.created_at >= ts_7d)
+                ).label("views_7d"),
+
+                func.count().filter(
+                    (Action.action_type == ActionType.VIEW)
+                    & (Action.created_at >= ts_30d)
+                ).label("views_30d"),
+
+                func.count().filter(
+                    (Action.action_type == ActionType.LIKE)
+                    & (Action.created_at >= ts_7d)
+                ).label("likes_7d"),
+
+                func.count().filter(
+                    (Action.action_type == ActionType.LIKE)
+                    & (Action.created_at >= ts_30d)
+                ).label("likes_30d"),
+
+                func.count().filter(
+                    Action.action_type == ActionType.VIEW
+                ).label("views_total"),
+
+                func.count().filter(
+                    Action.action_type == ActionType.LIKE
+                ).label("likes_total"),
+
+                func.count().filter(
+                    (Action.action_type == ActionType.VIEW)
+                    & (Action.created_at >= ts_14d)
+                    & (Action.created_at < ts_7d)
+                ).label("views_prev_7d"),
+            )
+            .where(
+                Action.course_id.in_(course_ids)
+            )
+            .group_by(Action.course_id)
+        )
+
+        rows = (
+            await self.__db_session.execute(q)
+        ).all()
+
+        result = {}
+
+        for row in rows:
+            views_7d = float(row.views_7d or 0)
+            views_30d = float(row.views_30d or 0)
+
+            likes_7d = float(row.likes_7d or 0)
+            likes_30d = float(row.likes_30d or 0)
+
+            views_total = float(row.views_total or 0)
+            likes_total = float(row.likes_total or 0)
+
+            views_prev_7d = float(row.views_prev_7d or 0)
+
+            result[row.course_id] = {
+                "course_views_7d": views_7d,
+                "course_views_30d": views_30d,
+                "course_likes_7d": likes_7d,
+                "course_likes_30d": likes_30d,
+
+                "course_like_rate": (
+                        likes_total /
+                        max(1.0, views_total + likes_total)
+                ),
+
+                "course_trend": (
+                        (views_7d + 1.0)
+                        /
+                        (views_prev_7d + 1.0)
+                )
+            }
+
+        return result
+
     async def build_features(self, user_id: int, candidate_ids: list[int]) -> tuple[pd.DataFrame, pd.DataFrame, list[int]]:
         """
         Builds feature DataFrames for view_ranker and like_ranker_v2.
@@ -178,6 +472,15 @@ class RankingFeaturesBuilder:
 
         user_window = await self._get_user_features(user_id=user_id)
         pair_features = await self._get_precomputed_features_bulk(user_id=user_id, course_ids=candidate_ids)
+
+        course_history = await self._get_user_course_history(
+            user_id=user_id,
+            course_ids=candidate_ids
+        )
+
+        course_stats = await self._get_course_stats(
+            candidate_ids
+        )
 
         courses_q = (
             select(Course)
@@ -195,6 +498,33 @@ class RankingFeaturesBuilder:
             if not course:
                 continue
 
+            hist = course_history.get(
+                cid,
+                {
+                    "views": 0,
+                    "likes": 0,
+                    "last_action": None,
+                }
+            )
+            viewed_before = float(hist["views"] > 0)
+            times_viewed_before = float(hist["views"])
+            liked_before = float(hist["likes"] > 0)
+            last_interaction_days = (
+                (datetime.now() - hist["last_action"]).days
+                if hist["last_action"]
+                else 999.0
+            )
+            stats = course_stats.get(
+                cid,
+                {
+                    "course_views_7d": 0.0,
+                    "course_views_30d": 0.0,
+                    "course_likes_7d": 0.0,
+                    "course_likes_30d": 0.0,
+                    "course_like_rate": 0.0,
+                    "course_trend": 1.0,
+                }
+            )
             course_tag_set = {t.name for t in course.tags}
             common_tags = float(len(user_tags & course_tag_set))
             denom = max(1.0, float(len(user_tags) + len(course_tag_set) - common_tags))
@@ -221,30 +551,31 @@ class RankingFeaturesBuilder:
                 "user_likes_30d": user_window["user_likes_30d"],
                 "user_tags_count": user_tags_count,
 
+                "duration_seconds": 0.0,
                 "session_duration_hours": 0.0,
                 "session_views": 0.0,
                 "session_likes": 0.0,
                 "session_like_rate": 0.0,
                 "view_pos_in_session": 1.0,
-                "time_since_last_like_hours": 0.0,
-                "user_views_1h": 0.0,
-                "user_views_4h": 0.0,
-                "user_activity_ratio_7d_30d": 0.0,
-                "user_like_rate_30d": 0.0,
+                "time_since_last_like_hours": user_window["time_since_last_like_seconds"],
+                "user_views_1h": user_window["user_views_1h"],
+                "user_views_4h": user_window["user_views_4h"],
+                "user_activity_ratio_7d_30d": user_window["user_activity_ratio_7d_30d"],
+                "user_like_rate_30d": user_window["user_like_rate_30d"],
                 "user_tags_entropy": 0.0,
                 "user_domain_count": 0.0,
-                "days_since_last_action": 0.0,
-                "user_views_prev_7d": 0.0,
-                "user_views_trend": 0.0,
+                "days_since_last_action": user_window["days_since_last_action"],
+                "user_views_prev_7d": user_window["user_views_prev_7d"],
+                "user_views_trend": user_window["user_views_trend"],
                 "user_session_length_avg": 0.0,
                 "user_session_activity_30min": 0.0,
                 "user_conversion_ratio": 0.0,
-                "course_views_7d": 0.0,
-                "course_views_30d": 0.0,
-                "course_likes_7d": 0.0,
-                "course_likes_30d": 0.0,
-                "course_like_rate": 0.0,
-                "course_trend": 0.0,
+                "course_views_7d": stats["course_views_7d"],
+                "course_views_30d": stats["course_views_30d"],
+                "course_likes_7d": stats["course_likes_7d"],
+                "course_likes_30d": stats["course_likes_30d"],
+                "course_like_rate": stats["course_like_rate"],
+                "course_trend": stats["course_trend"],
                 "course_age_days": 0.0,
                 "cooc_sum": 0.0,
                 "cooc_mean": 0.0,
@@ -257,12 +588,18 @@ class RankingFeaturesBuilder:
                 "max_cosine_to_recent_likes": 0.0,
                 "mean_cosine_to_recent_views": 0.0,
                 "max_jaccard_to_recent_likes": 0.0,
-                "viewed_before": 0.0,
-                "times_viewed_before": 0.0,
-                "liked_before": 0.0,
-                "last_interaction_days": 0.0,
+                "viewed_before": viewed_before,
+                "times_viewed_before": times_viewed_before,
+                "liked_before": liked_before,
+                "last_interaction_days": last_interaction_days,
                 "view_number": 1.0,
-                "hours_since_prev_view": 0.0,
+                "hours_since_prev_view": user_window["hours_since_prev_view"],
+                "is_repeat_view": viewed_before,
+                "hour_of_day": user_window["hour_of_day"],
+                "is_weekend": user_window["is_weekend"],
+                "likes_in_last_3_views": 0.0,
+                "time_since_last_like_seconds": 0.0,
+                "jaccard_tags": 0.0
             }
 
             row["course_difficulty_encoded_view"] = self._safe_transform_label(self.view_le_diff, course.difficulty)

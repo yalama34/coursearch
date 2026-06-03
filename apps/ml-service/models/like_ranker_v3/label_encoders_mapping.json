@@ -1,0 +1,28 @@
+{
+  "difficulty": {
+    "classes": [
+      "advanced",
+      "beginner",
+      "intermediate"
+    ],
+    "mapping": {
+      "advanced": 0,
+      "beginner": 1,
+      "intermediate": 2
+    }
+  },
+  "domain": {
+    "classes": [
+      "data_eng",
+      "ml_core",
+      "mlops_delivery",
+      "product_analytics"
+    ],
+    "mapping": {
+      "data_eng": 0,
+      "ml_core": 1,
+      "mlops_delivery": 2,
+      "product_analytics": 3
+    }
+  }
+}

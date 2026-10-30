@@ -4,7 +4,7 @@ import pickle
 import logging
 from typing import Any
 import pandas as pd
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from sqlalchemy import select, func, distinct
 from sqlalchemy.orm import selectinload
@@ -45,17 +45,17 @@ class RankingFeaturesBuilder:
         with open(os.path.join(view_dir, "le_domain.pkl"), "rb") as f:
             self.view_le_domain = pickle.load(f)
 
-        like_dir = os.path.join(models_dir, "like_ranker_v2")
+        like_dir = os.path.join(models_dir, "like_ranker_v3")
         with open(os.path.join(like_dir, "feature_cols.json"), "r") as f:
             self.like_cols = json.load(f)
             
         with open(os.path.join(like_dir, "scaler.pkl"), "rb") as f:
             self.like_scaler = pickle.load(f)
             
-        with open(os.path.join(like_dir, "le_difficulty.pkl"), "rb") as f:
+        with open(os.path.join(like_dir, "label_encoder_difficulty.pkl"), "rb") as f:
             self.like_le_diff = pickle.load(f)
             
-        with open(os.path.join(like_dir, "le_domain.pkl"), "rb") as f:
+        with open(os.path.join(like_dir, "label_encoder_domain.pkl"), "rb") as f:
             self.like_le_domain = pickle.load(f)
 
     def _safe_transform_label(self, le, val: str | None) -> int:
@@ -69,7 +69,7 @@ class RankingFeaturesBuilder:
             return 0
 
     async def _get_user_features(self, user_id: int) -> dict[str, float]:
-        now_ts = datetime.now()
+        now_ts = datetime.now(timezone.utc)
         ts_7d = now_ts - timedelta(days=7)
         ts_30d = now_ts - timedelta(days=30)
 
@@ -280,6 +280,7 @@ class RankingFeaturesBuilder:
             "user_like_rate_30d": user_like_rate_30d,
             "days_since_last_action": days_since_last_action,
             "time_since_last_like_hours": time_since_last_like_hours,
+            "time_since_last_like_seconds": (now_ts - last_like).total_seconds() if last_like else 9999.0,
             "likes_in_last_3_views": likes_in_last_3_views,
             "hours_since_prev_view": hours_since_prev_view,
             "hour_of_day": hour_of_day,
@@ -370,7 +371,7 @@ class RankingFeaturesBuilder:
         if not course_ids:
             return {}
 
-        now_ts = datetime.now()
+        now_ts = datetime.now(timezone.utc)
 
         ts_7d = now_ts - timedelta(days=7)
         ts_30d = now_ts - timedelta(days=30)
@@ -510,7 +511,7 @@ class RankingFeaturesBuilder:
             times_viewed_before = float(hist["views"])
             liked_before = float(hist["likes"] > 0)
             last_interaction_days = (
-                (datetime.now() - hist["last_action"]).days
+                (datetime.now(timezone.utc) - hist["last_action"]).days
                 if hist["last_action"]
                 else 999.0
             )
@@ -557,7 +558,7 @@ class RankingFeaturesBuilder:
                 "session_likes": 0.0,
                 "session_like_rate": 0.0,
                 "view_pos_in_session": 1.0,
-                "time_since_last_like_hours": user_window["time_since_last_like_seconds"],
+                "time_since_last_like_hours": user_window["time_since_last_like_hours"],
                 "user_views_1h": user_window["user_views_1h"],
                 "user_views_4h": user_window["user_views_4h"],
                 "user_activity_ratio_7d_30d": user_window["user_activity_ratio_7d_30d"],
@@ -598,7 +599,7 @@ class RankingFeaturesBuilder:
                 "hour_of_day": user_window["hour_of_day"],
                 "is_weekend": user_window["is_weekend"],
                 "likes_in_last_3_views": 0.0,
-                "time_since_last_like_seconds": 0.0,
+                "time_since_last_like_seconds": user_window["time_since_last_like_seconds"],
                 "jaccard_tags": 0.0
             }
 
